@@ -1,0 +1,22 @@
+root:
+  prepare: true
+  terraform:
+    location: ../terraform
+    prefix: bsa-auto-infra
+    modules:
+      vpc: ../terraform/modules/vpc
+
+resources:
+  vpc:
+    enabled: true
+    # Only if enabled is set to "false", then all the "pre_existing" parameters must be set
+    pre_existing:
+      vpc_id: "vpc-01234567"
+    # Full options for further implementation https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc
+    # This is only required when the resource is going to be created
+    options:
+      name: "vpc"
+      cidr_block: 10.15.0.0/20
+      instance_tenancy: "default"
+      enable_dns_support: "true"
+      enable_dns_hostnames: "false"

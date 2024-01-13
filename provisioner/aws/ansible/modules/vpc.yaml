@@ -1,0 +1,12 @@
+- name: VPC Generation Preparation
+  hosts: localhost
+  vars_files: ../env_variables_aws.yaml
+
+  tasks:
+    - name: Simplify reusable variables
+      set_fact:
+        vpc_name: "{{ root.terraform.prefix | normalize_string | concat_strings(resources.vpc.options.name) }}"
+        module_location: "{{ root.terraform.modules.vpc }}"
+
+    - name: Create terraform
+      shell: echo "{{ vpc_name }}"

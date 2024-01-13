@@ -19,26 +19,19 @@ Don't forget to give the project a star if you liked it! Thanks again! :star2: :
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
-  <a href="PROJECT_URL_TO_REPLACE">
+  <a href="https://github.com/Code-Triarii/bets-scrapper-analytics-infra">
     <img src="docs/img/logo.png" alt="Logo" width="100" height="100">
   </a>
 
-  <h3 align="center">TOEDIT: PROJECT NAME</h3>
+  <h3 align="center">BETS SCRAPPER ANALYTICS INFRA</h3>
 
   <p align="center">
-    TOEDIT: PROJECT BRIEFING - 1-2 Lines About the project
+    Focused on defining and operating the associated infrastructure to the Bets Scrapper Analytics project.
     <br />
-    <blockquote style="border-left: 4px solid red; background-color: lightgray; padding: 10px; text-align: left;">
-        <strong><span style="color: red;">Note:</span></strong> <span style="color: black;">Do not forget to change <b>PROJECT_URL_TO_REPLACE</b> with the actual URL of the project.</span>
-    </blockquote>
-    <blockquote style="border-left: 4px solid red; background-color: lightgray; padding: 10px; text-align: left;">
-        <strong><span style="color: red;">Note:</span></strong> <span style="color: black;">Do not forget to edit the following links when creating the project from the template.</span>
-    </blockquote>
-    <a href="">View Demo</a>
     ·
-    <a href="PROJECT_URL_TO_REPLACE/issues">Report Bug</a>
+    <a href="https://github.com/Code-Triarii/bets-scrapper-analytics-infra/issues">Report Bug</a>
     ·
-    <a href="PROJECT_URL_TO_REPLACE/issues">Request Feature</a>
+    <a href="https://github.com/Code-Triarii/bets-scrapper-analytics-infra/issues">Request Feature</a>
   </p>
 </div>
 
@@ -77,7 +70,7 @@ Don't forget to give the project a star if you liked it! Thanks again! :star2: :
 ## About The Project
 
 <p align="center">
-    <a href="PROJECT_URL_TO_REPLACE">
+    <a href="https://github.com/Code-Triarii/bets-scrapper-analytics-infra">
         <img src="docs/img/main.png" style="width: 500px; height: auto;" alt="Product Name Screen Shot">
     </a>
     <p align="center" style="color: lightgray; font-size: small; font-style: italic; padding: 0px; margin: 0px">TOEDIT: Modify the caption</p>
@@ -176,6 +169,17 @@ Other utilities, dependencies and plugins are listed below in <b>acknowledges</b
   * `dispatcher.py`: Dispatches services
 * `API Server`: serves the responses to CLI Requests. The related project can be located [TOEDIT: HERE](https://example.com)
 
+
+<b>Modules</b>:
+
+* `providers`: This folder includes the different `Ansible` and `Terraform` playbooks for provisioning the infrastructure for the different cloud providers.
+    * `aws`: Contains the main Ansible code to generate the Terraform one dynamically for deploying target infrastructure like the one specified in this [TOEDIT: This Diagram]()
+    * `filter_plugins`: contains the custom filters created to be reused accross the projects.
+
+    <blockquote style="border-left: 4px solid red; background-color: lightgray; padding: 10px; text-align: left;">
+    <strong><span style="color: red;">Note:</span></strong> <span style="color: black;">Do not forget to set the ANSIBLE_FILTER_PLUGINS environment variable to the absolute path where the custom_filters are located</b> with the actual URL of the project.</span>
+    </blockquote>
+
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
@@ -244,7 +248,7 @@ _For more examples, please refer to the [Documentation](https://example.com)_
     - [ ] Chinese
     - [ ] Spanish
 
-See the [open issues](PROJECT_URL_TO_REPLACE/issues) for a full list of proposed features (and known issues).
+See the [open issues](https://github.com/Code-Triarii/bets-scrapper-analytics-infra/issues) for a full list of proposed features (and known issues).
 
 For a more detailed understanding of the project progress, check the <a href="docs/CHANGELOG.md">CHANGELOG</a>
 
@@ -336,15 +340,15 @@ Do not skip it, you will like it :smirk: :smirk: :smirk:
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
 [contributors-shield]: https://img.shields.io/github/contributors/othneildrew/Best-README-Template.svg?style=for-the-badge
-[contributors-url]: PROJECT_URL_TO_REPLACE/graphs/contributors
+[contributors-url]: https://github.com/Code-Triarii/bets-scrapper-analytics-infra/graphs/contributors
 [forks-shield]: https://img.shields.io/github/forks/othneildrew/Best-README-Template.svg?style=for-the-badge
-[forks-url]: PROJECT_URL_TO_REPLACE/network/members
+[forks-url]: https://github.com/Code-Triarii/bets-scrapper-analytics-infra/network/members
 [stars-shield]: https://img.shields.io/github/stars/othneildrew/Best-README-Template.svg?style=for-the-badge
-[stars-url]: PROJECT_URL_TO_REPLACE/stargazers
+[stars-url]: https://github.com/Code-Triarii/bets-scrapper-analytics-infra/stargazers
 [issues-shield]: https://img.shields.io/github/issues/othneildrew/Best-README-Template.svg?style=for-the-badge
-[issues-url]: PROJECT_URL_TO_REPLACE/issues
+[issues-url]: https://github.com/Code-Triarii/bets-scrapper-analytics-infra/issues
 [license-shield]: https://img.shields.io/github/license/othneildrew/Best-README-Template.svg?style=for-the-badge
-[license-url]: PROJECT_URL_TO_REPLACE/blob/master/LICENSE
+[license-url]: https://github.com/Code-Triarii/bets-scrapper-analytics-infra/blob/master/LICENSE
 
 <!-- SOCIAL MEDIA -->
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=gray

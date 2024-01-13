@@ -1,0 +1,3 @@
+---
+- import_playbook: modules/vpc.yaml
+  when: resources.vpc.enabled

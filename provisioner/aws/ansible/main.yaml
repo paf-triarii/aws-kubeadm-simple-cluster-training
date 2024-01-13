@@ -1,0 +1,4 @@
+---
+- import_playbook: prepare_terraform.yaml
+  when: root.prepare
+
