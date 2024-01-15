@@ -116,6 +116,11 @@
 - import_playbook: modules/sg_create.yaml
   when: resources.security_group.enabled
 
+- import_playbook: modules/sg_ingress_rules_create.yaml
+  when: resources.security_group.enabled
+
+- import_playbook: modules/sg_egress_rules_create.yaml
+  when: resources.security_group.enabled
 
 - import_playbook: modules/sg_pre_existing.yaml
   when: not resources.security_group.enabled

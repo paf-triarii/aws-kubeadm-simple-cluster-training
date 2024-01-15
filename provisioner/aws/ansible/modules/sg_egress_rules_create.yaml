@@ -1,4 +1,4 @@
-- name: Security Group Ingress Rules Generation Preparation
+- name: Security Group Egress Rules Generation Preparation
   hosts: localhost
   vars_files: ../env_variables_aws.yaml
 
@@ -6,7 +6,7 @@
     - name: Simplify reusable variables
       set_fact:
         security_group_name: "{{ root.terraform.prefix | normalize_string | concat_strings(resources.security_group.options.name) }}"
-        module_outputs: "{{ modules_location }}/security_groups_ingress_rules"
+        module_outputs: "{{ modules_location }}/security_groups_egress_rules"
 
     - name: Create Module folder
       shell: |
@@ -41,14 +41,14 @@
       ansible.builtin.blockinfile:
         path: "{{ module_outputs }}/main.tf"
         block: |
-          resource "aws_vpc_security_group_ingress_rule" "sg_ing_{{ item.name | normalize_string }}" {
+          resource "aws_vpc_security_group_egress_rule" "sg_rgrs_{{ item.name | normalize_string }}" {
             security_group_id         = var.security_group_id 
             cidr_ipv4   = "{{ item.source }}"
             ip_protocol = "{{ item.protocol }}"
             from_port = {{ item.portRange.start }}
             to_port   = {{ item.portRange.end }}
         marker: "#REMOVE_ME"
-      loop: "{{ resources.security_group.options.rules.ingress }}"
+      loop: "{{ resources.security_group.options.rules.egress }}"
 
     #############################
     # MODIFYING ROOT MAIN FILES #
@@ -58,8 +58,8 @@
       ansible.builtin.blockinfile:
         path: "{{ terraform_outputs }}/main.tf"
         block: |
-          module "aws_vpc_security_group_ingress_rule" {
-            source = "./modules/security_groups_ingress_rules"
+          module "aws_vpc_security_group_egress_rule" {
+            source = "./modules/security_groups_egress_rules"
             security_group_id = module.security_group_name.security_group_id
           }
         marker: "#REMOVE_ME"
