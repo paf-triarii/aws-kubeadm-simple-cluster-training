@@ -1,5 +1,8 @@
 root:
+  # Flag the decides if the terraform files are generated using the playbook
   prepare: true
+  # TODO: Decide if implementing here the creation or handle it outside of this playbook. See parttens to see common reusability
+  write: true
   terraform:
     location: ../terraform_templates
     aws_version: 4.0

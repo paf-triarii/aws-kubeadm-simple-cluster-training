@@ -5,7 +5,11 @@
   tasks:
     - name: Prepare reusable fact
       set_fact:
-        terraform_outputs: "{{ root.outputs.location | append_datetime }}"
+        terraform_outputs: "{{ root.outputs.location | append_datetime }}/{{ root.terraform.prefix }}"
+
+    - name: Prepare reusable fact
+      set_fact:
+        modules_location: "{{ terraform_outputs }}/modules"
 
     # TODO: Change to custom role reusable tasks that we want to do in the same way always.
     # TODO: Handle skipping scenario fully. What happens if skipping, aborts, user confirmation? Think in this feature.
@@ -13,14 +17,14 @@
       shell: |
         if [ ! -d "{{ terraform_outputs }}" ]; then
           mkdir -p "{{ terraform_outputs }}"
-          mkdir -p "{{ terraform_outputs }}/{{ root.terraform.prefix }}/modules"
+          mkdir -p "{{ modules_location }}"
         else 
           echo "Outputs Folder in location {{ terraform_outputs }} already exists. Skipping."
         fi
 
     - name: Prepare Main Output Files
       shell: |
-          touch {{ item }}
+          touch {{ terraform_outputs }}/{{ item }}
       loop: ["variables.tf","providers.tf", "main.tf","outputs.tf","envVariables"] 
 
     ################################
@@ -30,7 +34,7 @@
     # providers.tf
     - name: Prepare providers.tf content file
       ansible.builtin.blockinfile:
-        path: "{{ terraform_outputs }}/{{ root.terraform.prefix }}/providers.tf"
+        path: "{{ terraform_outputs }}/providers.tf"
         block: |
           terraform {
             required_providers {
@@ -48,7 +52,7 @@
     # variables.tf
     - name: Prepare Terraform Global variables.tf content file
       ansible.builtin.blockinfile:
-        path: "{{ terraform_outputs }}/{{ root.terraform.prefix }}/variables.tf"
+        path: "{{ terraform_outputs }}/variables.tf"
         block: |
           variable "tags" {
             type = map(string)
@@ -58,23 +62,26 @@
         marker: "#REMOVE_ME"
 
     # envVariables.
-
     - name: Prepare Tags in Terraform format
       set_fact:
         tags: "{{ tags | default('') + item.key + ' = \"' + item.value + '\",' }}"
-
       loop: "{{ resources.tags | dict2items  }}"
 
     - name: Prepare Terraform Global envVariables (real values) content file
       ansible.builtin.blockinfile:
-        path: "{{ terraform_outputs }}/{{ root.terraform.prefix }}/envVariables"
+        path: "{{ terraform_outputs }}/envVariables"
         block: |
           tags = {{ '{' + tags + '}'}}
         marker: "#REMOVE_ME"
 
+
+    ##################
+    # FINAL CLEAN-UP #
+    ##################
+
     - name: Clean "#REMOVE_ME" unwanted markers for previous block insertions
       ansible.builtin.lineinfile:
-        path: "{{ terraform_outputs }}/{{ root.terraform.prefix }}/{{ item }}"
+        path: "{{ terraform_outputs }}/{{ item }}"
         state: absent
         regexp: '#REMOVE_ME'
       loop: ["variables.tf","providers.tf", "main.tf","outputs.tf","envVariables"]

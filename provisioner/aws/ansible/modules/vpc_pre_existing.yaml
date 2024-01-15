@@ -1,0 +1,7 @@
+- name: VPC Pre-Existing Preparation
+  hosts: localhost
+  vars_files: ../env_variables_aws.yaml
+
+  tasks:
+    - name: Test
+      shell: echo Test
