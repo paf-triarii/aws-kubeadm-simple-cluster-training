@@ -61,7 +61,7 @@
         block: |
           module "aws_vpc_security_group_egress_rule" {
             source = "./modules/security_groups_egress_rules"
-            security_group_id = module.security_group_name.security_group_id
+            security_group_id = module.aws_security_group.security_group_id
           }
         marker: "#REMOVE_ME"
 
