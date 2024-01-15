@@ -47,6 +47,7 @@
             ip_protocol = "{{ item.protocol }}"
             from_port = {{ item.portRange.start }}
             to_port   = {{ item.portRange.end }}
+          }
         marker: "#REMOVE_ME"
       loop: "{{ resources.security_group.options.rules.ingress }}"
 
