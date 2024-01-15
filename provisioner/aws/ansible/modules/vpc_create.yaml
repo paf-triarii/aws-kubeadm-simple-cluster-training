@@ -130,9 +130,17 @@
     # FINAL CLEAN-UP #
     ##################
 
-    - name: Clean "#REMOVE_ME" unwanted markers for previous block insertions
+    - name: Clean "#REMOVE_ME" unwanted markers for previous Module block insertions
       ansible.builtin.lineinfile:
         path: "{{ module_outputs }}/{{ item }}"
         state: absent
         regexp: '#REMOVE_ME'
       loop: ["variables.tf", "main.tf","outputs.tf"]
+
+
+    - name: Clean "#REMOVE_ME" unwanted markers for previous Root block insertions
+      ansible.builtin.lineinfile:
+        path: "{{ terraform_outputs }}/{{ item }}"
+        state: absent
+        regexp: '#REMOVE_ME'
+      loop: ["variables.tf", "main.tf","outputs.tf","envVariables"]
