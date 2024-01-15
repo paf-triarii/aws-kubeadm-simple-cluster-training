@@ -21,7 +21,7 @@
     - name: Prepare Main Output Files
       shell: |
           touch {{ item }}
-      loop: ["variables.tf","providers.tf", "main.tf","outputs.tf"] 
+      loop: ["variables.tf","providers.tf", "main.tf","outputs.tf","envVariables"] 
 
     ################################
     # PREPARING MAIN FILES CONTENT #
@@ -57,12 +57,27 @@
 
         marker: "#REMOVE_ME"
 
+    # envVariables.
+
+    - name: Prepare Tags in Terraform format
+      set_fact:
+        tags: "{{ tags | default('') + item.key + ' = \"' + item.value + '\",' }}"
+
+      loop: "{{ resources.tags | dict2items  }}"
+
+    - name: Prepare Terraform Global envVariables (real values) content file
+      ansible.builtin.blockinfile:
+        path: "{{ terraform_outputs }}/{{ root.terraform.prefix }}/envVariables"
+        block: |
+          tags = {{ '{' + tags + '}'}}
+        marker: "#REMOVE_ME"
+
     - name: Clean "#REMOVE_ME" unwanted markers for previous block insertions
       ansible.builtin.lineinfile:
         path: "{{ terraform_outputs }}/{{ root.terraform.prefix }}/{{ item }}"
         state: absent
         regexp: '#REMOVE_ME'
-      loop: ["variables.tf","providers.tf", "main.tf","outputs.tf"]
+      loop: ["variables.tf","providers.tf", "main.tf","outputs.tf","envVariables"]
 
 
 

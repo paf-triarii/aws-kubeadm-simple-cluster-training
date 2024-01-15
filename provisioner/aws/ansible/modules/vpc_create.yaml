@@ -6,8 +6,7 @@
     - name: Simplify reusable variables
       set_fact:
         vpc_name: "{{ root.terraform.prefix | normalize_string | concat_strings(resources.vpc.options.name) }}"
-        module_outputs: "{{ root.outputs.location | append_datetime }}/{{ root.terraform.prefix }}/modules/vpc"
-
+        module_outputs: "{{ terraform_outputs }}/{{ root.terraform.prefix }}/modules/vpc"
 
     - name: Create required main.tf, outputs.tf and variables.tf
       shell: |
@@ -19,7 +18,7 @@
     ###############################
 
     # variables.tf
-    - name: Prepare variables.tf content file
+    - name: Prepare module variables.tf content file
       ansible.builtin.blockinfile:
         path: "{{ module_outputs }}/variables.tf"
         block: |
@@ -46,7 +45,7 @@
 
 
     # main.tf
-    - name: Prepare main.tf content file
+    - name: Prepare module main.tf content file
       ansible.builtin.blockinfile:
         path: "{{ module_outputs }}/main.tf"
         block: |
@@ -61,13 +60,72 @@
 
 
     # outputs.tf
-    - name: Prepare outputs.tf content file
+    - name: Prepare module outputs.tf content file
       ansible.builtin.blockinfile:
         path: "{{ module_outputs }}/outputs.tf"
         block: |
           output "vpc_id" {
             description = "The created vpc id"
             value = aws_vpc.{{ vpc_name }}.id
+          }
+        marker: "#REMOVE_ME"
+
+
+    #############################
+    # MODIFYING ROOT MAIN FILES #
+    #############################
+
+    - name: Prepare root main.tf content file
+      ansible.builtin.blockinfile:
+        path: "{{ terraform_outputs }}/main.tf"
+        block: |
+          module "aws_vpc" {
+            source = "./modules/vpc"
+            vpc_name     = var.vpc_name
+            vpc_cidr_block = var.vpc_cidr_block
+            vpc_instance_tenancy = var.vpc_instance_tenancy
+            tags = var.tags
+          }
+        marker: "#REMOVE_ME"
+
+    - name: Prepare root variables.tf content file
+      ansible.builtin.blockinfile:
+        path: "{{ terraform_outputs }}/variables.tf"
+        block: |
+          variable "vpc_name" {
+            type = string
+            description = "Name tag for the vpc resource"
+          }
+
+          variable "vpc_cidr_block" {
+            type = string
+            description = "CIDR Block of VPN. E.g. 10.0.0.0/16"
+          }
+
+          variable "vpc_instance_tenancy" {
+            type = string
+            description = "A tenancy option for instances launched into the VPC. Values: default or dedicated"
+          }
+        marker: "#REMOVE_ME"
+
+
+    - name: Prepare root envVariables (real values) content file
+      ansible.builtin.blockinfile:
+        path: "{{ terraform_outputs }}/envVariables"
+        block: |
+          variable "vpc_name" {
+            type = string
+            description = "Name tag for the vpc resource"
+          }
+
+          variable "vpc_cidr_block" {
+            type = string
+            description = "CIDR Block of VPN. E.g. 10.0.0.0/16"
+          }
+
+          variable "vpc_instance_tenancy" {
+            type = string
+            description = "A tenancy option for instances launched into the VPC. Values: default or dedicated"
           }
         marker: "#REMOVE_ME"
 

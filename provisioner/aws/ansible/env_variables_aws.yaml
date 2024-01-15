@@ -10,6 +10,9 @@ root:
     location: /home/perico/infra-provision-outputs
 
 resources:
+  tags:
+    OWNER: APPSEC
+    PURPOSE: AUTOMATION
   vpc:
     enabled: true
     # Only if enabled is set to "false", then all the "pre_existing" parameters must be set
