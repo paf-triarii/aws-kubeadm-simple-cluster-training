@@ -1,0 +1,5 @@
+- name: Mock
+  hosts: localhost
+  tasks:
+    - name: Test
+      shell: echo Test

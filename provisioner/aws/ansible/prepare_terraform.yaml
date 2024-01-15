@@ -98,3 +98,17 @@
 
 - import_playbook: modules/vpc_pre_existing.yaml
   when: not resources.vpc.enabled
+
+# If VPC creation is enabled, then it will create the subnet either way (not a pre_existing one).
+- import_playbook: modules/subnet_create.yaml
+  when: resources.vpc.enabled
+
+# If VPC creation is pre-existing, there are two options:
+# 1) Create Subnet inside the VPC
+# 2) Use a pre-existing subnet
+- import_playbook: modules/subnet_create.yaml
+  when: (not resources.vpc.enabled) and resources.subnet.enabled
+
+# If VPC is pre-existing, there is the option also to use a pre-existing subnet
+- import_playbook: modules/subnet_pre_existing.yaml
+  when: (not resources.vpc.enabled) and (not resources.subnet.enabled)

@@ -1,12 +1,12 @@
-- name: VPC Generation Preparation
+- name: Subnet Generation Preparation
   hosts: localhost
   vars_files: ../env_variables_aws.yaml
 
   tasks:
     - name: Simplify reusable variables
       set_fact:
-        vpc_name: "{{ root.terraform.prefix | normalize_string | concat_strings(resources.vpc.options.name) }}"
-        module_outputs: "{{ modules_location }}/vpc"
+        subnet_name: "{{ root.terraform.prefix | normalize_string | concat_strings(resources.subnet.options.name) }}"
+        module_outputs: "{{ modules_location }}/subnet"
 
     - name: Create Module folder
       shell: |
@@ -34,19 +34,19 @@
             description = "General Tags that will be applied to all the resources generated"
           }
 
-          variable "vpc_name" {
+          variable "subnet_name" {
             type = string
-            description = "Name tag for the vpc resource"
+            description = "Name tag for the subnet resource"
           }
 
-          variable "vpc_cidr_block" {
+          variable "subnet_cidr_block" {
             type = string
-            description = "CIDR Block of VPC. E.g. 10.0.0.0/16"
+            description = "CIDR Block of subnet. E.g. 10.0.0.0/24"
           }
 
-          variable "vpc_instance_tenancy" {
+          variable "vpc_id" {
             type = string
-            description = "A tenancy option for instances launched into the VPC. Values: default or dedicated"
+            description = "ID of the parent VPC"
           }
         marker: "#REMOVE_ME"
 
@@ -56,12 +56,12 @@
       ansible.builtin.blockinfile:
         path: "{{ module_outputs }}/main.tf"
         block: |
-          resource "aws_vpc" "{{ vpc_name }}" {
-            cidr_block       = var.vpc_cidr_block
-            instance_tenancy = var.vpc_instance_tenancy
+          resource "aws_subnet" "{{ subnet_name }}" {
+            vpc_id     = var.vpc_id
+            cidr_block = var.subnet_cidr_block
 
             tags = merge(var.tags,
-              { Name = var.vpc_name })
+              { Name = var.subnet_name })
           }
         marker: "#REMOVE_ME"
 
@@ -71,9 +71,9 @@
       ansible.builtin.blockinfile:
         path: "{{ module_outputs }}/outputs.tf"
         block: |
-          output "vpc_id" {
-            description = "The created vpc id"
-            value = aws_vpc.{{ vpc_name }}.id
+          output "subnet_id" {
+            description = "The created subnet id"
+            value = aws_subnet.{{ subnet_name }}.id
           }
         marker: "#REMOVE_ME"
 
@@ -86,11 +86,11 @@
       ansible.builtin.blockinfile:
         path: "{{ terraform_outputs }}/main.tf"
         block: |
-          module "aws_vpc" {
-            source = "./modules/vpc"
-            vpc_name     = var.vpc_name
-            vpc_cidr_block = var.vpc_cidr_block
-            vpc_instance_tenancy = var.vpc_instance_tenancy
+          module "aws_subnet" {
+            source = "./modules/subnet"
+            vpc_id = module.aws_vpc.vpc_id
+            subnet_name     = var.subnet_name
+            subnet_cidr_block = var.subnet_cidr_block
             tags = var.tags
           }
         marker: "#REMOVE_ME"
@@ -99,19 +99,14 @@
       ansible.builtin.blockinfile:
         path: "{{ terraform_outputs }}/variables.tf"
         block: |
-          variable "vpc_name" {
+          variable "subnet_name" {
             type = string
-            description = "Name tag for the vpc resource"
+            description = "Name tag for the subnet resource"
           }
 
-          variable "vpc_cidr_block" {
+          variable "subnet_cidr_block" {
             type = string
-            description = "CIDR Block of VPC. E.g. 10.0.0.0/16"
-          }
-
-          variable "vpc_instance_tenancy" {
-            type = string
-            description = "A tenancy option for instances launched into the VPC. Values: default or dedicated"
+            description = "CIDR Block of subnet. E.g. 10.0.0.0/24"
           }
         marker: "#REMOVE_ME"
 
@@ -120,9 +115,8 @@
       ansible.builtin.blockinfile:
         path: "{{ terraform_outputs }}/envVariables"
         block: |
-          vpc_name = "{{ vpc_name }}"
-          vpc_cidr_block = "{{ resources.vpc.options.cidr_block }}"
-          vpc_instance_tenancy = "{{ resources.vpc.options.instance_tenancy }}"
+          subnet_name = "{{ subnet_name }}"
+          subnet_cidr_block = "{{ resources.subnet.options.cidr_block }}"
         marker: "#REMOVE_ME"
 
 
