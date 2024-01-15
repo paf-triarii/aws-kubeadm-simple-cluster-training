@@ -48,4 +48,62 @@ resources:
     options:
       name: "sg"
       description: "Security Group of team for Development Automation"
+      rules:
+        ingress:
+          # Add or delete more elements to the array to generate more rules
+          - name: Allow all traffic in VPC
+            protocol: all
+            portRange: 
+              start: 0
+              end: 65535
+            # IMPORTANT: To enable this rule, ensure that matches the resources.vpc.options.cidr_block
+            source: 10.15.0.0/20
+
+          - name: Allow RDP Traffic for my target IP
+            protocol: all
+            portRange: 
+              start: 389
+              end: 389
+            # This is a sample public IP
+            source: 88.17.97.213/24
+        egress:
+            - name: Allow all traffic to same VPC
+              # This indicates all the protocols ("-1" also works as an equivalent)
+              protocol: all
+              # For only one port use the same por for start and finish
+              # The full range is 0-65535
+              portRange: 
+                start: 0
+                end: 65535
+              # IMPORTANT: To enable this rule, ensure that matches the resources.vpc.options.cidr_block
+              # TODO: Create automation so it "Self VPC" inputs the VPC id either pre-existing or generated instead of having to have the exact value.
+              destination: 10.15.0.0/20
+
+            - name: Allow Splunk
+              protocol: TCP
+              portRange: 
+                start: 9997
+                end: 9997
+              destination: 0.0.0.0/0
+
+            - name: Allow Common internet 80
+              protocol: TCP
+              portRange: 
+                start: 80
+                end: 80
+              destination: 0.0.0.0/0
+
+            - name: Allow Common internet 8080
+              protocol: TCP
+              portRange: 
+                start: 8080
+                end: 8080
+              destination: 0.0.0.0/0
+
+            - name: Allow Common internet 443
+              protocol: TCP
+              portRange: 
+                start: 443
+                end: 443
+              destination: 0.0.0.0/0
     

@@ -1,1 +1,3 @@
 provisioner/filter_plugins/__pycache__
+.vscode
+.vscode/*
