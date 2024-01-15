@@ -1,0 +1,155 @@
+- name: Security Group Generation Preparation
+  hosts: localhost
+  vars_files: ../env_variables_aws.yaml
+
+  tasks:
+    - name: Simplify reusable variables
+      set_fact:
+        security_group_name: "{{ root.terraform.prefix | normalize_string | concat_strings(resources.security_group.options.name) }}"
+        module_outputs: "{{ modules_location }}/security_group"
+
+    - name: Create Module folder
+      shell: |
+        if [ ! -d "{{ module_outputs }}" ]; then
+          mkdir -p "{{ module_outputs }}"
+        else 
+          echo "Outputs Folder in location {{ module_outputs }} already exists. Skipping."
+        fi
+
+    - name: Create required main.tf, outputs.tf and variables.tf
+      shell: touch {{ module_outputs }}/{{ item }}
+      loop: ["main.tf","variables.tf","outputs.tf"]
+
+    ###############################
+    # PREPARING MODULE MAIN FILES #
+    ###############################
+
+    # variables.tf
+    - name: Prepare module variables.tf content file
+      ansible.builtin.blockinfile:
+        path: "{{ module_outputs }}/variables.tf"
+        block: |
+          variable "tags" {
+            type = map(string)
+            description = "General Tags that will be applied to all the resources generated"
+          }
+
+          variable "security_group_name" {
+            type = string
+            description = "Name tag for the security_group resource"
+          }
+
+          variable "security_group_description" {
+            type = string
+            description = "Main description of the purpose of the security group"
+          }
+
+          variable "vpc_id" {
+            type = string
+            description = "ID of the parent VPC"
+          }
+        marker: "#REMOVE_ME"
+
+
+    # main.tf
+    - name: Prepare module main.tf content file
+      ansible.builtin.blockinfile:
+        path: "{{ module_outputs }}/main.tf"
+        block: |
+          resource "aws_security_group" "{{ security_group_name }}" {
+            name        = var.security_group_name
+            vpc_id     = var.vpc_id
+            description = var.security_group_description
+            
+            tags = merge(var.tags,
+              { Name = var.security_group_name })
+          }
+        marker: "#REMOVE_ME"
+
+
+    # outputs.tf
+    - name: Prepare module outputs.tf content file
+      ansible.builtin.blockinfile:
+        path: "{{ module_outputs }}/outputs.tf"
+        block: |
+          output "security_group_id" {
+            description = "The created security_group id"
+            value = aws_security_group.{{ security_group_name }}.id
+          }
+        marker: "#REMOVE_ME"
+
+
+    #############################
+    # MODIFYING ROOT MAIN FILES #
+    #############################
+
+    # Option 1: Pre-Existing VPC so it is taken from variable
+    # Option 2: VPC created by playbook, so it is an output from aws_vpc module
+    - name: Prepare root main.tf content file
+      ansible.builtin.blockinfile:
+        path: "{{ terraform_outputs }}/main.tf"
+        block: |
+          module "aws_security_group" {
+            source = "./modules/security_group"
+            vpc_id = {{ 'module.aws_vpc.vpc_id' if resources.vpc.enabled else 'var.vpc_id' | replace("'","")  }}
+            security_group_name     = var.security_group_name
+            security_group_description = var.security_group_description
+            tags = var.tags
+          }
+        marker: "#REMOVE_ME"
+
+    - name: Prepare root variables.tf content file
+      ansible.builtin.blockinfile:
+        path: "{{ terraform_outputs }}/variables.tf"
+        block: |
+          variable "security_group_name" {
+            type = string
+            description = "Name tag for the security_group resource"
+          }
+
+          variable "security_group_description" {
+            type = string
+            description = "Main description of the purpose of the security group"
+          }
+        marker: "#REMOVE_ME"
+
+    # Option 1: Pre-Existing VPC input variable
+    - name: Prepare root variables.tf content file if vpc create
+      ansible.builtin.blockinfile:
+        path: "{{ terraform_outputs }}/variables.tf"
+        block: |
+          variable "vpc_id" {
+            type = string
+            description = "ID of the parent VPC"
+          }
+        marker: "#REMOVE_ME"
+      when: not resources.vpc.enabled
+
+
+    - name: Prepare root envVariables (real values) content file
+      ansible.builtin.blockinfile:
+        path: "{{ terraform_outputs }}/envVariables"
+        block: |
+          security_group_name = "{{ security_group_name }}"
+          security_group_description = "{{ resources.security_group.options.description }}"
+        marker: "#REMOVE_ME"
+
+
+    ##################
+    # FINAL CLEAN-UP #
+    ##################
+
+    - name: Clean "#REMOVE_ME" unwanted markers for previous Module block insertions
+      ansible.builtin.lineinfile:
+        path: "{{ module_outputs }}/{{ item }}"
+        state: absent
+        regexp: '#REMOVE_ME'
+      loop: ["variables.tf", "main.tf","outputs.tf"]
+
+
+    - name: Clean "#REMOVE_ME" unwanted markers for previous Root block insertions
+      ansible.builtin.lineinfile:
+        path: "{{ terraform_outputs }}/{{ item }}"
+        state: absent
+        regexp: '#REMOVE_ME'
+      loop: ["variables.tf", "main.tf","outputs.tf","envVariables"]

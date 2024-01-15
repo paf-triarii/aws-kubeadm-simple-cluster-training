@@ -112,3 +112,10 @@
 # If VPC is pre-existing, there is the option also to use a pre-existing subnet
 - import_playbook: modules/subnet_pre_existing.yaml
   when: (not resources.vpc.enabled) and (not resources.subnet.enabled)
+
+- import_playbook: modules/sg_create.yaml
+  when: resources.security_group.enabled
+
+
+- import_playbook: modules/sg_pre_existing.yaml
+  when: not resources.security_group.enabled

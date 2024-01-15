@@ -39,3 +39,13 @@ resources:
       name: "sbt"
       cidr_block: 10.15.0.1/24
       availability_zone: ""
+  security_group:
+    enabled: true
+    pre_existing:
+      security_group_id: "sg-01234567"
+    # Full options for further implementation https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc
+    # This is only required when the resource is going to be created
+    options:
+      name: "sg"
+      description: "Security Group of team for Development Automation"
+    
