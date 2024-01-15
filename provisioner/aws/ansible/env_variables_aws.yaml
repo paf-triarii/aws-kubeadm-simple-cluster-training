@@ -1,10 +1,13 @@
 root:
   prepare: true
   terraform:
-    location: ../terraform
+    location: ../terraform_templates
+    aws_version: 4.0
     prefix: bsa-auto-infra
     modules:
-      vpc: ../terraform/modules/vpc
+      vpc: ../terraform_templates/modules/vpc
+  outputs:
+    location: /home/perico/infra-provision-outputs
 
 resources:
   vpc:
@@ -20,3 +23,13 @@ resources:
       instance_tenancy: "default"
       enable_dns_support: "true"
       enable_dns_hostnames: "false"
+  subnet:
+    enabled: true
+    pre_existing:
+      subnet_id: "subnet-01234567"
+    # Full options for further implementation https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/subnet
+    # This is only required when the resource is going to be created
+    options:
+      name: "sbt"
+      cidr_block: 10.15.0.1/24
+      availability_zone: ""

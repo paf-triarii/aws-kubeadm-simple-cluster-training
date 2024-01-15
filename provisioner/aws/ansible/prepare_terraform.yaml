@@ -1,3 +1,78 @@
 ---
-- import_playbook: modules/vpc.yaml
+- name: Prepare Outputs
+  hosts: localhost
+  vars_files: env_variables_aws.yaml
+  tasks:
+    - name: Prepare reusable fact
+      set_fact:
+        terraform_outputs: "{{ root.outputs.location | append_datetime }}"
+
+    # TODO: Change to custom role reusable tasks that we want to do in the same way always.
+    # TODO: Handle skipping scenario fully. What happens if skipping, aborts, user confirmation? Think in this feature.
+    - name: Create Output Folders
+      shell: |
+        if [ ! -d "{{ terraform_outputs }}" ]; then
+          mkdir -p "{{ terraform_outputs }}"
+          mkdir -p "{{ terraform_outputs }}/{{ root.terraform.prefix }}/modules"
+        else 
+          echo "Outputs Folder in location {{ terraform_outputs }} already exists. Skipping."
+        fi
+
+    - name: Prepare Main Output Files
+      shell: |
+          touch {{ item }}
+      loop: ["variables.tf","providers.tf", "main.tf","outputs.tf"] 
+
+    ################################
+    # PREPARING MAIN FILES CONTENT #
+    ################################
+
+    # providers.tf
+    - name: Prepare providers.tf content file
+      ansible.builtin.blockinfile:
+        path: "{{ terraform_outputs }}/{{ root.terraform.prefix }}/providers.tf"
+        block: |
+          terraform {
+            required_providers {
+              aws = {
+                source  = "hashicorp/aws"
+                version = "~> {{ root.terraform.aws_version }}"
+              }
+            }
+          }
+
+          # Left intentionally empty because we handle the authentication and region configuration trough environment variables.
+          provider "aws" {}
+        marker: "#REMOVE_ME"
+
+    # variables.tf
+    - name: Prepare Terraform Global variables.tf content file
+      ansible.builtin.blockinfile:
+        path: "{{ terraform_outputs }}/{{ root.terraform.prefix }}/variables.tf"
+        block: |
+          variable "tags" {
+            type = map(string)
+            description = "General Tags that will be applied to all the resources generated"
+          }
+
+        marker: "#REMOVE_ME"
+
+    - name: Clean "#REMOVE_ME" unwanted markers for previous block insertions
+      ansible.builtin.lineinfile:
+        path: "{{ terraform_outputs }}/{{ root.terraform.prefix }}/{{ item }}"
+        state: absent
+        regexp: '#REMOVE_ME'
+      loop: ["variables.tf","providers.tf", "main.tf","outputs.tf"]
+
+
+
+######################
+# MODULES MANAGEMENT #
+######################
+
+- import_playbook: modules/vpc_create.yaml
   when: resources.vpc.enabled
+
+
+- import_playbook: modules/vpc_pre_existing.yaml
+  when: not resources.vpc.enabled

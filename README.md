@@ -28,7 +28,6 @@ Don't forget to give the project a star if you liked it! Thanks again! :star2: :
   <p align="center">
     Focused on defining and operating the associated infrastructure to the Bets Scrapper Analytics project.
     <br />
-    ·
     <a href="https://github.com/Code-Triarii/bets-scrapper-analytics-infra/issues">Report Bug</a>
     ·
     <a href="https://github.com/Code-Triarii/bets-scrapper-analytics-infra/issues">Request Feature</a>

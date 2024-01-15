@@ -1,0 +1,84 @@
+- name: VPC Generation Preparation
+  hosts: localhost
+  vars_files: ../env_variables_aws.yaml
+
+  tasks:
+    - name: Simplify reusable variables
+      set_fact:
+        vpc_name: "{{ root.terraform.prefix | normalize_string | concat_strings(resources.vpc.options.name) }}"
+        module_outputs: "{{ root.outputs.location | append_datetime }}/{{ root.terraform.prefix }}/modules/vpc"
+
+
+    - name: Create required main.tf, outputs.tf and variables.tf
+      shell: |
+        touch {{ module_outputs }}/{{ item }}
+      loop: ["main.tf","variables.tf","outputs.tf"]
+
+    ###############################
+    # PREPARING MODULE MAIN FILES #
+    ###############################
+
+    # variables.tf
+    - name: Prepare variables.tf content file
+      ansible.builtin.blockinfile:
+        path: "{{ module_outputs }}/variables.tf"
+        block: |
+          variable "tags" {
+            type = map(string)
+            description = "General Tags that will be applied to all the resources generated"
+          }
+
+          variable "vpc_name" {
+            type = string
+            description = "Name tag for the vpc resource"
+          }
+
+          variable "vpc_cidr_block" {
+            type = string
+            description = "CIDR Block of VPN. E.g. 10.0.0.0/16"
+          }
+
+          variable "vpc_instance_tenancy" {
+            type = string
+            description = "A tenancy option for instances launched into the VPC. Values: default or dedicated"
+          }
+        marker: "#REMOVE_ME"
+
+
+    # main.tf
+    - name: Prepare main.tf content file
+      ansible.builtin.blockinfile:
+        path: "{{ module_outputs }}/main.tf"
+        block: |
+          resource "aws_vpc" "{{ vpc_name }}" {
+            cidr_block       = var.vpc_cidr_block
+            instance_tenancy = var.vpc_instance_tenancy
+
+            tags = merge(var.tags,
+              { Name = var.vpc_name })
+          }
+        marker: "#REMOVE_ME"
+
+
+    # outputs.tf
+    - name: Prepare outputs.tf content file
+      ansible.builtin.blockinfile:
+        path: "{{ module_outputs }}/outputs.tf"
+        block: |
+          output "vpc_id" {
+            description = "The created vpc id"
+            value = aws_vpc.{{ vpc_name }}.id
+          }
+        marker: "#REMOVE_ME"
+
+
+    ##################
+    # FINAL CLEAN-UP #
+    ##################
+
+    - name: Clean "#REMOVE_ME" unwanted markers for previous block insertions
+      ansible.builtin.lineinfile:
+        path: "{{ module_outputs }}/{{ item }}"
+        state: absent
+        regexp: '#REMOVE_ME'
+      loop: ["variables.tf", "main.tf","outputs.tf"]
