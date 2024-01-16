@@ -10,7 +10,7 @@ root:
     modules:
       vpc: ../terraform_templates/modules/vpc
   outputs:
-    location: /home/perico/infra-provision-outputs
+    location: /app/infra-provision-outputs
 
 resources:
   tags:
@@ -37,7 +37,7 @@ resources:
     # This is only required when the resource is going to be created
     options:
       name: "sbt"
-      cidr_block: 10.15.0.1/24
+      cidr_block: 10.15.0.0/24
       availability_zone: ""
   security_group:
     enabled: true
@@ -60,20 +60,20 @@ resources:
             source: 10.15.0.0/20
 
           - name: Allow RDP Traffic for my target IP
-            protocol: all
+            protocol: TCP
             portRange:
               start: 389
               end: 389
             # This is a sample public IP
-            source: 88.17.97.213/24
+            source: 88.17.97.213/32
 
           - name: Allow SSH Traffic for my target IP
-            protocol: all
+            protocol: TCP
             portRange:
               start: 22
               end: 22
             # This is a sample public IP
-            source: 88.17.97.213/24
+            source: 88.17.97.213/32
         egress:
           - name: Allow all traffic to same VPC
             # This indicates all the protocols ("-1" also works as an equivalent)
@@ -122,8 +122,8 @@ resources:
     count: 1
     options:
       name: "i"
-      ami:
-      instance_type: m5.4xlarge
+      ami: "ami-00ffeb610527f540b"
+      instance_type: "m5.4xlarge"
       volumes:
         size: 100
         delete_on_termination: true

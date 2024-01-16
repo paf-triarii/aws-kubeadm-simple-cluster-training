@@ -135,7 +135,7 @@
         path: "{{ module_outputs }}/{{ item }}"
         state: absent
         regexp: '#REMOVE_ME'
-      loop: ["variables.tf", "main.tf","outputs.tf"]
+      loop: ["variables.tf", "main.tf", "outputs.tf"]
 
 
     - name: Clean "#REMOVE_ME" unwanted markers for previous Root block insertions
@@ -143,4 +143,4 @@
         path: "{{ terraform_outputs }}/{{ item }}"
         state: absent
         regexp: '#REMOVE_ME'
-      loop: ["variables.tf", "main.tf","outputs.tf","envVariables"]
+      loop: ["variables.tf", "main.tf", "outputs.tf", "envVariables"]
