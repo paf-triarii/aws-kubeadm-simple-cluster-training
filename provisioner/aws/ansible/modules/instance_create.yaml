@@ -1,0 +1,193 @@
+- name: Instance(s) Generation Preparation
+  hosts: localhost
+  vars_files: ../env_variables_aws.yaml
+
+  tasks:
+    - name: Simplify reusable variables
+      ansible.builtin.set_fact:
+        instance_name: "{{ root.terraform.prefix | normalize_string | concat_strings(resources.subnet.options.name) }}"
+        module_outputs: "{{ modules_location }}/instance"
+
+    - name: Create Module folder
+      ansible.builtin.shell: |
+        if [ ! -d "{{ module_outputs }}" ]; then
+          mkdir -p "{{ module_outputs }}"
+        else
+          echo "Outputs Folder in location {{ module_outputs }} already exists. Skipping."
+        fi
+
+    - name: Create required main.tf, outputs.tf and variables.tf
+      ansible.builtin.shell: touch {{ module_outputs }}/{{ item }}
+      loop: ["main.tf", "variables.tf", "outputs.tf"]
+
+    ###############################
+    # PREPARING MODULE MAIN FILES #
+    ###############################
+
+    # variables.tf
+    - name: Prepare module variables.tf content file
+      ansible.builtin.blockinfile:
+        path: "{{ module_outputs }}/variables.tf"
+        block: |
+          variable "tags" {
+            type = map(string)
+            description = "General Tags that will be applied to all the resources generated"
+          }
+
+          variable "subnet_id" {
+            type = string
+            description = "ID for the subnet resource"
+          }
+
+          variable "instance_type" {
+            type = string
+            description = "Type of the instance. E.g. c6a.2xlarge"
+          }
+
+          variable "instance_ami" {
+            type = string
+            description = "AMI ID for the instance. E.g. ami-0abcdef1234567890"
+          }
+
+          variable "security_group_id" {
+            type = string
+            description = "SG ID for the instance."
+          }
+
+          variable "key_name" {
+            type = string
+            description = "Key name for the instance."
+          }
+        marker: "#REMOVE_ME"
+
+
+    # main.tf
+    - name: Prepare module main.tf content file
+      ansible.builtin.blockinfile:
+        path: "{{ module_outputs }}/main.tf"
+        block: |
+          resource "aws_instance" "{{ instance_name }}_{{ l_index }}" {
+            subnet_id     = var.subnet_id
+            instance_type = var.instance_type
+            instance_ami = var.instance_ami
+            key_name = var.key_name
+            # To Obtain Windows Administrator Password Automatically
+            get_password_data = true
+
+            vpc_security_group_ids = [
+              var.{{ security_group_name }}_id
+            ]
+
+
+            root_block_device {
+              delete_on_termination = {{ resources.instance.options.volumes.delete_on_termination }}
+              volume_size = {{ resources.instance.options.volumes.size }}
+              volume_type = "gp2"
+              encrypted = {{ resources.instance.options.volumes.encrypted }}
+            }
+
+            tags = merge(var.tags,
+              { Name = "{{ instance_name }}_{{ l_index }}" })
+          }
+        marker: "#REMOVE_ME"
+      loop: "{{ range(0, resources.instance.count | int) }}"
+      loop_control:
+        index_var: l_index
+
+
+    # outputs.tf
+    - name: Prepare module outputs.tf content file
+      ansible.builtin.blockinfile:
+        path: "{{ module_outputs }}/outputs.tf"
+        block: |
+          output "{{ instance_name }}_{{ l_index }}_public_ip" {
+            description = "The public IP associated to the instance"
+            value = aws_instance.{{ instance_name }}_{{ l_index }}.public_ip
+          }
+
+          output "{{ instance_name }}_{{ l_index }}_arn" {
+            description = "The ARN associated to the instance"
+            value = aws_instance.{{ instance_name }}_{{ l_index }}.arn
+          }
+
+          output "{{ instance_name }}_{{ l_index }}_password_data" {
+            description = "The windows administrator password Base64 encoded"
+            value = aws_instance.{{ instance_name }}_{{ l_index }}.password_data
+          }
+        marker: "#REMOVE_ME"
+      loop: "{{ range(0, resources.instance.count | int) }}"
+      loop_control:
+        index_var: l_index
+
+
+    #############################
+    # MODIFYING ROOT MAIN FILES #
+    #############################
+
+    # TODO: Make instance name available as a Terraform Variable as well using concat string utility.
+    - name: Prepare root main.tf content file
+      ansible.builtin.blockinfile:
+        path: "{{ terraform_outputs }}/main.tf"
+        block: |
+          module "aws_instance" {
+            source = "./modules/instance"
+            subnet_id = {{ 'module.aws_subnet.subnet_id' if resources.subnet.enabled else 'var.subnet_id' | replace("'", "") }}
+            instance_name = "{{ instance_name }}_{{ l_index }}"
+            key_name = module.aws_key_pair.{{ key_pair_name }}_{{ l_index }}
+            security_group_id = module.aws_security_group.{{ security_group_name }}_id
+            tags = var.tags
+          }
+        marker: "#REMOVE_ME"
+      loop: "{{ range(0, resources.instance.count | int) }}"
+      loop_control:
+        index_var: l_index
+
+    # TODO: Make instance name available as a Terraform Variable as well using concat string utility.
+    - name: Prepare root variables.tf content file
+      ansible.builtin.blockinfile:
+        path: "{{ terraform_outputs }}/variables.tf"
+        block: |
+        # TODO: Include key_pair_name input variable
+        marker: "#REMOVE_ME"
+
+    - name: Prepare root outputs.tf content file
+      ansible.builtin.blockinfile:
+        path: "{{ terraform_outputs }}/outputs.tf"
+        block: |
+          output "{{ instance_name }}_{{ l_index }}_public_ip" {
+            description = "The public IP associated to the instance"
+            value = aws_instance.{{ instance_name }}_{{ l_index }}.public_ip
+          }
+
+          output "{{ instance_name }}_{{ l_index }}_arn" {
+            description = "The ARN associated to the instance"
+            value = aws_instance.{{ instance_name }}_{{ l_index }}.arn
+          }
+
+          output "{{ instance_name }}_{{ l_index }}_password_data" {
+            description = "The windows administrator password Base64 encoded"
+            value = aws_instance.{{ instance_name }}_{{ l_index }}.password_data
+          }
+        marker: "#REMOVE_ME"
+      loop: "{{ range(0, resources.instance.count | int) }}"
+      loop_control:
+        index_var: l_index
+
+    ##################
+    # FINAL CLEAN-UP #
+    ##################
+
+    - name: Clean "#REMOVE_ME" unwanted markers for previous Module block insertions
+      ansible.builtin.lineinfile:
+        path: "{{ module_outputs }}/{{ item }}"
+        state: absent
+        regexp: '#REMOVE_ME'
+      loop: ["variables.tf", "main.tf", "outputs.tf"]
+
+
+    - name: Clean "#REMOVE_ME" unwanted markers for previous Root block insertions
+      ansible.builtin.lineinfile:
+        path: "{{ terraform_outputs }}/{{ item }}"
+        state: absent
+        regexp: '#REMOVE_ME'
+      loop: ["variables.tf", "main.tf", "outputs.tf", "envVariables"]

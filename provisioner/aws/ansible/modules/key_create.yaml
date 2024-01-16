@@ -1,24 +1,24 @@
-- name: Subnet Generation Preparation
+- name: Key Pair Generation Preparation
   hosts: localhost
   vars_files: ../env_variables_aws.yaml
 
   tasks:
     - name: Simplify reusable variables
       ansible.builtin.set_fact:
-        subnet_name: "{{ root.terraform.prefix | normalize_string | concat_strings(resources.subnet.options.name) }}"
-        module_outputs: "{{ modules_location }}/subnet"
+        key_pair_name: "{{ root.terraform.prefix | normalize_string | concat_strings(resources.subnet.options.name) }}_key"
+        module_outputs: "{{ modules_location }}/key"
 
     - name: Create Module folder
-      shell: |
+      ansible.builtin.shell: |
         if [ ! -d "{{ module_outputs }}" ]; then
           mkdir -p "{{ module_outputs }}"
-        else 
+        else
           echo "Outputs Folder in location {{ module_outputs }} already exists. Skipping."
         fi
 
     - name: Create required main.tf, outputs.tf and variables.tf
-      shell: touch {{ module_outputs }}/{{ item }}
-      loop: ["main.tf","variables.tf","outputs.tf"]
+      ansible.builtin.shell: touch {{ module_outputs }}/{{ item }}
+      loop: ["main.tf", "variables.tf", "outputs.tf"]
 
     ###############################
     # PREPARING MODULE MAIN FILES #
@@ -33,21 +33,6 @@
             type = map(string)
             description = "General Tags that will be applied to all the resources generated"
           }
-
-          variable "subnet_name" {
-            type = string
-            description = "Name tag for the subnet resource"
-          }
-
-          variable "subnet_cidr_block" {
-            type = string
-            description = "CIDR Block of subnet. E.g. 10.0.0.0/24"
-          }
-
-          variable "vpc_id" {
-            type = string
-            description = "ID of the parent VPC"
-          }
         marker: "#REMOVE_ME"
 
 
@@ -56,14 +41,28 @@
       ansible.builtin.blockinfile:
         path: "{{ module_outputs }}/main.tf"
         block: |
-          resource "aws_subnet" "{{ subnet_name }}" {
-            vpc_id     = var.vpc_id
-            cidr_block = var.subnet_cidr_block
+          resource "tls_private_key" "{{ key_pair_name }}_{{ l_index }}" {
+            algorithm = "{{ resources.key.algorithm }}"
+            rsa_bits  = {{ resources.key.bits }}
+          }
 
+          # Create the Key Pair
+          resource "aws_key_pair" "{{ key_pair_name }}_{{ l_index }}" {
+            key_name   = "{{ key_pair_name }}_{{ l_index }}"
+            public_key = tls_private_key.{{ key_pair_name }}_{{ l_index }}.public_key_openssh
             tags = merge(var.tags,
-              { Name = var.subnet_name })
+              { Name = "{{ key_pair_name }}_{{ l_index }}" })
+          }
+
+          # Save file
+          resource "local_file" "{{ key_pair_name }}_{{ l_index }}" {
+            filename = "{{ module_outputs }}/{{ key_pair_name }}_{{ l_index }}.pem"
+            content  = tls_private_key.{{ key_pair_name }}_{{ l_index }}.private_key_pem
           }
         marker: "#REMOVE_ME"
+      loop: "{{ range(0, resources.instance.count | int) }}"
+      loop_control:
+        index_var: l_index
 
 
     # outputs.tf
@@ -71,11 +70,14 @@
       ansible.builtin.blockinfile:
         path: "{{ module_outputs }}/outputs.tf"
         block: |
-          output "subnet_id" {
-            description = "The created subnet id"
-            value = aws_subnet.{{ subnet_name }}.id
+          output "{{ key_pair_name }}_{{ l_index }}" {
+            description = "The key to be generated"
+            value = aws_key_pair.{{ key_pair_name }}_{{ l_index }}.key_name
           }
         marker: "#REMOVE_ME"
+      loop: "{{ range(0, resources.instance.count | int) }}"
+      loop_control:
+        index_var: l_index
 
 
     #############################
@@ -86,39 +88,11 @@
       ansible.builtin.blockinfile:
         path: "{{ terraform_outputs }}/main.tf"
         block: |
-          module "aws_subnet" {
-            source = "./modules/subnet"
-            vpc_id = module.aws_vpc.vpc_id
-            subnet_name     = var.subnet_name
-            subnet_cidr_block = var.subnet_cidr_block
+          module "aws_key_pair" {
+            source = "./modules/key"
             tags = var.tags
           }
         marker: "#REMOVE_ME"
-
-    - name: Prepare root variables.tf content file
-      ansible.builtin.blockinfile:
-        path: "{{ terraform_outputs }}/variables.tf"
-        block: |
-          variable "subnet_name" {
-            type = string
-            description = "Name tag for the subnet resource"
-          }
-
-          variable "subnet_cidr_block" {
-            type = string
-            description = "CIDR Block of subnet. E.g. 10.0.0.0/24"
-          }
-        marker: "#REMOVE_ME"
-
-
-    - name: Prepare root envVariables (real values) content file
-      ansible.builtin.blockinfile:
-        path: "{{ terraform_outputs }}/envVariables"
-        block: |
-          subnet_name = "{{ subnet_name }}"
-          subnet_cidr_block = "{{ resources.subnet.options.cidr_block }}"
-        marker: "#REMOVE_ME"
-
 
     ##################
     # FINAL CLEAN-UP #
@@ -129,7 +103,7 @@
         path: "{{ module_outputs }}/{{ item }}"
         state: absent
         regexp: '#REMOVE_ME'
-      loop: ["variables.tf", "main.tf","outputs.tf"]
+      loop: ["variables.tf", "main.tf", "outputs.tf"]
 
 
     - name: Clean "#REMOVE_ME" unwanted markers for previous Root block insertions
@@ -137,4 +111,4 @@
         path: "{{ terraform_outputs }}/{{ item }}"
         state: absent
         regexp: '#REMOVE_ME'
-      loop: ["variables.tf", "main.tf","outputs.tf","envVariables"]
+      loop: ["main.tf"]

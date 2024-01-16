@@ -4,7 +4,7 @@
 
   tasks:
     - name: Simplify reusable variables
-      set_fact:
+      ansible.builtin.set_fact:
         vpc_name: "{{ root.terraform.prefix | normalize_string | concat_strings(resources.vpc.options.name) }}"
         module_outputs: "{{ modules_location }}/vpc"
 
