@@ -140,3 +140,12 @@
 - name: Generate instance resource
   ansible.builtin.import_playbook: modules/instance_create.yaml
   when: resources.instance.enabled
+
+- name: Generate internet gateway resource
+  ansible.builtin.import_playbook: modules/internet_gateway_create.yaml
+  when: resources.internet_gateway.enabled
+
+
+- name: Generate routes and route table resources
+  ansible.builtin.import_playbook: modules/route_table_create.yaml
+  when: resources.route_table.enabled

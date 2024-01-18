@@ -62,8 +62,8 @@ resources:
           - name: Allow RDP Traffic for my target IP
             protocol: TCP
             portRange:
-              start: 389
-              end: 389
+              start: 3389
+              end: 3389
             # This is a sample public IP
             source: 88.17.97.213/32
 
@@ -128,3 +128,20 @@ resources:
         size: 100
         delete_on_termination: true
         encrypted: true
+  internet_gateway:
+    enabled: true
+    options:
+      name: "ig"
+    # IMPORTANT-IG-ID: In case of using an existing internet gateway, remember to include the id in the routes for internet access resources.route_table.options.routes[0].target
+  route_table:
+    enabled: true
+    options:
+      name: "rt"
+      routes:
+        # For any additional routes, it only needs to be set as another element of the list with the details of name, type, destination and target.
+        - name: to internet gateway
+          type: gateway_id
+          destination: 0.0.0.0/0
+          # If internet gateway creation is enabled and target is "playbook", it will use the id of the current generated internet gateway id.
+          # Otherwise an internet gateway id must be specified here (Check # IMPORTANT-IG-ID).
+          target: playbook

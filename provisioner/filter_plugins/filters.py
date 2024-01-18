@@ -12,6 +12,7 @@ class FilterModule(object):
         return {
             'normalize_string': self.normalize_string,
             'concat_strings': self.concat_strings,
+            'concat_strings_raw': self.concat_strings_raw,
             'append_datetime': self.append_datetime
         }
     
@@ -42,6 +43,21 @@ class FilterModule(object):
 
         Returns:
         str: Concatenated string with underscores.
+        """
+        # Filter out empty strings and concatenate with '_'
+        return str('_'.join(filter(None, args)))
+    
+
+    @staticmethod
+    def concat_strings_raw(*args):
+        """
+        Concatenates multiple strings with an underscore, ignoring any empty strings.
+
+        Parameters:
+        *args: Variable length argument list of strings.
+
+        Returns:
+        str: Concatenated string with no character to join.
         """
         # Filter out empty strings and concatenate with '_'
         return str('_'.join(filter(None, args)))

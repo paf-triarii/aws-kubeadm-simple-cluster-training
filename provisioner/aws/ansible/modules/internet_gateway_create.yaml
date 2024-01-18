@@ -1,0 +1,127 @@
+- name: Subnet Internet gateway Preparation
+  hosts: localhost
+  vars_files: ../env_variables_aws.yaml
+
+  tasks:
+    - name: Simplify reusable variables
+      ansible.builtin.set_fact:
+        internet_gateway_name: "{{ root.terraform.prefix | normalize_string | concat_strings(resources.internet_gateway.options.name) }}"
+        module_outputs: "{{ modules_location }}/internet_gateway"
+
+    - name: Create Module folder
+      shell: |
+        if [ ! -d "{{ module_outputs }}" ]; then
+          mkdir -p "{{ module_outputs }}"
+        else 
+          echo "Outputs Folder in location {{ module_outputs }} already exists. Skipping."
+        fi
+
+    - name: Create required main.tf, outputs.tf and variables.tf
+      shell: touch {{ module_outputs }}/{{ item }}
+      loop: ["main.tf", "variables.tf", "outputs.tf"]
+
+    ###############################
+    # PREPARING MODULE MAIN FILES #
+    ###############################
+
+    # variables.tf
+    - name: Prepare module variables.tf content file
+      ansible.builtin.blockinfile:
+        path: "{{ module_outputs }}/variables.tf"
+        block: |
+          variable "tags" {
+            type = map(string)
+            description = "General Tags that will be applied to all the resources generated"
+          }
+
+          variable "internet_gateway_name" {
+            type = string
+            description = "Name tag of the internet gateway"
+          }
+
+          variable "vpc_id" {
+            type = string
+            description = "ID of the parent VPC"
+          }
+        marker: "#REMOVE_ME"
+
+
+    # main.tf
+    - name: Prepare module main.tf content file
+      ansible.builtin.blockinfile:
+        path: "{{ module_outputs }}/main.tf"
+        block: |
+          resource "aws_internet_gateway" "{{ internet_gateway_name }}" {
+            vpc_id     = var.vpc_id
+
+            tags = merge(var.tags,
+              { Name = var.internet_gateway_name })
+          }
+        marker: "#REMOVE_ME"
+
+
+    # outputs.tf
+    - name: Prepare module outputs.tf content file
+      ansible.builtin.blockinfile:
+        path: "{{ module_outputs }}/outputs.tf"
+        block: |
+          output "internet_gateway_id" {
+            description = "The created internet gateway id"
+            value = aws_internet_gateway.{{ internet_gateway_name }}.id
+          }
+        marker: "#REMOVE_ME"
+
+
+    #############################
+    # MODIFYING ROOT MAIN FILES #
+    #############################
+
+    - name: Prepare root main.tf content file
+      ansible.builtin.blockinfile:
+        path: "{{ terraform_outputs }}/main.tf"
+        block: |
+          module "aws_internet_gateway" {
+            source = "./modules/internet_gateway"
+            vpc_id = module.aws_vpc.vpc_id
+            internet_gateway_name  = var.internet_gateway_name
+            tags = var.tags
+          }
+        marker: "#REMOVE_ME"
+
+    - name: Prepare root variables.tf content file
+      ansible.builtin.blockinfile:
+        path: "{{ terraform_outputs }}/variables.tf"
+        block: |
+          variable "internet_gateway_name" {
+            type = string
+            description = "Name tag for the internet gateway resource"
+          }
+        marker: "#REMOVE_ME"
+
+
+    - name: Prepare root envVariables (real values) content file
+      ansible.builtin.blockinfile:
+        path: "{{ terraform_outputs }}/envVariables"
+        block: |
+          internet_gateway_name = "{{ internet_gateway_name }}"
+        marker: "#REMOVE_ME"
+
+
+    ##################
+    # FINAL CLEAN-UP #
+    ##################
+
+    - name: Clean "#REMOVE_ME" unwanted markers for previous Module block insertions
+      ansible.builtin.lineinfile:
+        path: "{{ module_outputs }}/{{ item }}"
+        state: absent
+        regexp: '#REMOVE_ME'
+      loop: ["variables.tf", "main.tf", "outputs.tf"]
+
+
+    - name: Clean "#REMOVE_ME" unwanted markers for previous Root block insertions
+      ansible.builtin.lineinfile:
+        path: "{{ terraform_outputs }}/{{ item }}"
+        state: absent
+        regexp: '#REMOVE_ME'
+      loop: ["variables.tf", "main.tf", "outputs.tf", "envVariables"]

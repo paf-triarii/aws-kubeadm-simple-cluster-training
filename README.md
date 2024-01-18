@@ -227,7 +227,7 @@ Please read carefully and <b>May the force be with you</b> :hatched_chick: :hatc
 
     ```bash
         docker run --user $(id -u):$(id -g) -v $(pwd):/app  -e AWS_ACCESS_KEY_ID="" -e AWS_SECRET_ACCESS_KEY="" \
-  -e AWS_REGION="eu-west-1"   -e VERBOSITY="-vvv" -e ANSIBLE_FILTER_PLUGINS=/appr/filter_plugins terraform-generator:1.0 ansible-playbook aws/ansible/main.yaml -vv 
+        -e AWS_REGION="eu-west-1"   -e VERBOSITY="-vvv" -e ANSIBLE_FILTER_PLUGINS=/app/filter_plugins terraform-generator:1.0 ansible-playbook aws/ansible/main.yaml -vv 
     ```
 
 
