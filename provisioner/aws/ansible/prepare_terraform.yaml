@@ -149,3 +149,8 @@
 - name: Generate routes and route table resources
   ansible.builtin.import_playbook: modules/route_table_create.yaml
   when: resources.route_table.enabled
+
+- name: Generate required configuration for client VPN
+  ansible.builtin.import_playbook: modules/vpn_create.yaml
+  when: resources.vpn.enabled
+

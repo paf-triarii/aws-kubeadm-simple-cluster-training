@@ -37,6 +37,7 @@ It is quite flexible. Enjoy it!
     - [💼 Usage](#-usage)
       - [Locally](#locally)
       - [With Docker](#with-docker)
+    - [🛜 Connect to instance](#-connect-to-instance)
   - [📍 Roadmap](#-roadmap)
   - [📎 Contributing](#-contributing)
   - [📃 License](#-license)
@@ -149,14 +150,6 @@ terraform plan -var-file=envVariables --out tfplan
 terraform apply tfplan
 ```
 
-6. Obtain the password for the instance.
-
-```bash
-python3 provisioner/password_retriever.py  <bsa_auto_infra_sbt_0_password_data-value-showed-in-console> $(find $(pwd) -type d -name infra-provision*)/bsa-auto-infra/modules/key/bsa_auto_infra_sbt_key_0.pem
-```
-
-7. Use `Remote Desktop` from your instance to connect. Creds: `Administrator:<your-decrypted-password>`
-
 #### With Docker
 
 If you have built the image and adapted the [Ansible env variables as your desired configuration](./provisioner/aws/ansible/env_variables_aws.yaml), then you just need to execute this!
@@ -169,8 +162,33 @@ docker run --user $(id -u):$(id -g) -v $(pwd)/provisioner:/app  -e AWS_ACCESS_KE
 > [!IMPORTANT]
 > Do not forget to set the real values for `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`.
 
+### 🛜 Connect to instance
 
-Do not forget to follow step `6` and `7` from [Usage > Locally](#locally)
+1. Obtain the password for the instance.
+
+```bash
+python3 provisioner/password_retriever.py  <bsa_auto_infra_sbt_0_password_data-value-showed-in-console> $(find $(pwd) -type d -name infra-provision*)/bsa-auto-infra/modules/key/bsa_auto_infra_sbt_key_0.pem
+```
+
+2. Use `Remote Desktop` from your instance to connect. Creds: `Administrator:<your-decrypted-password>`
+
+> [!TIP]
+> If you have enabled the creation of client vpn, follow the next steps. **Make sure to select your region first!**
+
+3. Navigate to [Client VPNS](https://eu-west-2.console.aws.amazon.com/vpc/home?region=eu-west-2#ClientVPNEndpoints:)
+4. Click on **Download client configuration**
+
+![Client VPN download](docs/img/client-download-vpn.png)
+
+5. Insert the client certificates in the downloaded file. Check the illustration for the format.
+
+```
+terraform_outputs=$(find $(pwd) -type d -name infra-provision*)
+cat ${terraform_outputs}/bsa-auto-infra/modules/vpn/pki_certs/client.crt
+cat ${terraform_outputs}/bsa-auto-infra/modules/vpn/pki_certs/client.key
+```
+
+![Client OpenVPN modification](docs/img/client-openvpn.png)
 
 <!-- ROADMAP -->
 ## 📍 Roadmap
@@ -178,6 +196,7 @@ Do not forget to follow step `6` and `7` from [Usage > Locally](#locally)
 - [x] Support for AWS
 - [x] Support flexibility in creating the Terraform through ansible.
 - [x] Creates: VPC, Subnet, Internet Gateway, Security Groups, SSH keys and instances linking all the objects as required.
+- [x] Include creation of client vpn endpoint with self-signed certificates (not recommended for production set up)
 
 
 See the [open issues](https://github.com/Code-Triarii/aws-windows-provider/issues) for a full list of proposed features (and known issues).

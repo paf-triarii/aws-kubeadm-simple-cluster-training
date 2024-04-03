@@ -1,0 +1,225 @@
+- name: Instance(s) Generation Preparation
+  hosts: localhost
+  vars_files: ../env_variables_aws.yaml
+
+  tasks:
+    - name: Simplify reusable variables
+      ansible.builtin.set_fact:
+        vpn_name: "{{ root.terraform.prefix | normalize_string | concat_strings(resources.subnet.options.name) }}"
+        module_outputs: "{{ modules_location }}/vpn"
+
+    - name: Create Module folder
+      ansible.builtin.shell: |
+        if [ ! -d "{{ module_outputs }}" ]; then
+          mkdir -p "{{ module_outputs }}"
+        else
+          echo "Outputs Folder in location {{ module_outputs }} already exists. Skipping."
+        fi
+
+    - name: Create required main.tf, outputs.tf and variables.tf
+      ansible.builtin.shell: touch {{ module_outputs }}/{{ item }}
+      loop: ["main.tf", "variables.tf", "outputs.tf"]
+
+    ###############################
+    #    PREPARING PKI FOR VPN    #
+    ###############################
+
+    - name: Generate Root Certificate
+      apt:
+        name: git
+        state: present
+
+    - name: Clone EasyRSA repository
+      ansible.builtin.git:
+        repo: "https://github.com/OpenVPN/easy-rsa.git"
+        dest: "{{ module_outputs }}/easy-rsa"
+
+    - name: Initialize pki
+      ansible.builtin.shell: |
+        cd "{{ module_outputs }}/easy-rsa/easyrsa3"
+        ./easyrsa init-pki
+      args:
+        chdir: "{{ module_outputs }}/easy-rsa/easyrsa3"
+
+    - name: Build CA
+      ansible.builtin.shell: |
+        export EASYRSA_BATCH=1
+        ./easyrsa build-ca nopass
+      args:
+        chdir: "{{ module_outputs }}/easy-rsa/easyrsa3"
+
+    - name: Generate Server Key
+      ansible.builtin.shell: |
+        export EASYRSA_BATCH=1
+        ./easyrsa --san=DNS:{{ resources.vpn.domain }} build-server-full server nopass
+      args:
+        chdir: "{{ module_outputs }}/easy-rsa/easyrsa3"
+
+    - name: Generate Client Key
+      ansible.builtin.shell: |
+        export EASYRSA_BATCH=1
+        ./easyrsa build-client-full client nopass
+      args:
+        chdir: "{{ module_outputs }}/easy-rsa/easyrsa3"
+
+    - name: Move the created certs to folder
+      ansible.builtin.shell: |
+        mkdir -p pki_certs
+        cp {{ module_outputs }}/easy-rsa/easyrsa3/pki/ca.crt pki_certs/
+        cp {{ module_outputs }}/easy-rsa/easyrsa3/pki/private/ca.key pki_certs/
+        cp {{ module_outputs }}/easy-rsa/easyrsa3/pki/issued/server.crt pki_certs/
+        cp {{ module_outputs }}/easy-rsa/easyrsa3/pki/private/server.key pki_certs/
+        cp {{ module_outputs }}/easy-rsa/easyrsa3/pki/issued/client.crt pki_certs/
+        cp {{ module_outputs }}/easy-rsa/easyrsa3/pki/private/client.key pki_certs/
+      args:
+        chdir: "{{ module_outputs }}"
+
+    ###############################
+    # PREPARING MODULE MAIN FILES #
+    ###############################
+
+    # variables.tf
+    - name: Prepare module variables.tf content file
+      ansible.builtin.blockinfile:
+        path: "{{ module_outputs }}/variables.tf"
+        block: |
+          variable "tags" {
+            type = map(string)
+            description = "General Tags that will be applied to all the resources generated"
+          }
+
+          variable "vpn_cidr" {
+            type = string
+            description = "CIDR for the VPN"
+          }
+
+          variable "vpc_id" {
+            type = string
+            description = "ID of the VPC to associate with the VPN"
+          }
+
+          variable "subnet_id" {
+            type = string
+            description = "ID of the subnet to associate with the VPN"
+          }
+
+          variable "security_group_id" {
+            type = string
+            description = "Security group ID (same as instances)"
+          }
+
+        marker: "#REMOVE_ME"
+
+
+    # main.tf
+    - name: Prepare module main.tf content file
+      ansible.builtin.blockinfile:
+        path: "{{ module_outputs }}/main.tf"
+        block: |
+          resource "aws_acm_certificate" "{{ vpn_name }}" {
+            private_key      = file("{{ module_outputs }}/pki_certs/server.key")
+            certificate_body = file("{{ module_outputs }}/pki_certs/server.crt")
+            certificate_chain = file("{{ module_outputs }}/pki_certs/ca.crt")
+
+            lifecycle {
+              create_before_destroy = true
+            }
+          }
+
+          resource "aws_acm_certificate" "{{ vpn_name }}_root" {
+            private_key      = file("{{ module_outputs }}/pki_certs/ca.key")
+            certificate_body = file("{{ module_outputs }}/pki_certs/ca.crt")
+
+            lifecycle {
+              create_before_destroy = true
+            }
+          }
+
+          resource "aws_ec2_client_vpn_endpoint" "{{ vpn_name }}" {
+            description            = "Client VPN endpoint for {{ vpn_name }}"
+            server_certificate_arn = aws_acm_certificate.{{ vpn_name }}.arn
+            client_cidr_block      = var.vpn_cidr
+            vpc_id                 = var.vpc_id
+
+            authentication_options {
+              type                       = "certificate-authentication"
+              root_certificate_chain_arn = aws_acm_certificate.{{ vpn_name }}_root.arn
+            }
+            connection_log_options {
+              enabled = false
+            }
+            security_group_ids = [var.security_group_id]
+          }
+
+          resource "aws_ec2_client_vpn_network_association" "{{ vpn_name }}" {
+            client_vpn_endpoint_id = aws_ec2_client_vpn_endpoint.{{ vpn_name }}.id
+            subnet_id              = var.subnet_id
+          }
+
+          resource "aws_ec2_client_vpn_authorization_rule" "{{ vpn_name }}" {
+            client_vpn_endpoint_id = aws_ec2_client_vpn_endpoint.{{ vpn_name }}.id
+            target_network_cidr    = "0.0.0.0/0"
+            authorize_all_groups   = true
+          }
+
+          resource "aws_ec2_client_vpn_route" "{{ vpn_name }}" {
+            client_vpn_endpoint_id = aws_ec2_client_vpn_endpoint.{{ vpn_name }}.id
+            destination_cidr_block = "0.0.0.0/0"
+            target_vpc_subnet_id   = var.subnet_id
+          }
+        marker: "#REMOVE_ME"
+
+
+    #############################
+    # MODIFYING ROOT MAIN FILES #
+    #############################
+
+    - name: Prepare root main.tf content file
+      ansible.builtin.blockinfile:
+        path: "{{ terraform_outputs }}/main.tf"
+        block: |
+          module "aws_ec2_client_vpn_endpoint" {
+            source = "./modules/vpn"
+            vpn_cidr = var.vpn_cidr
+            security_group_id = module.aws_security_group.security_group_id
+            vpc_id = module.aws_vpc.vpc_id
+            subnet_id = module.aws_subnet.subnet_id
+            tags = var.tags
+          }
+        marker: "#REMOVE_ME"
+
+    - name: Prepare root variables.tf content file
+      ansible.builtin.blockinfile:
+        path: "{{ terraform_outputs }}/variables.tf"
+        block: |
+          variable "vpn_cidr" {
+            type = string
+            description = "CIDR for the VPN"
+          }
+        marker: "#REMOVE_ME"
+
+    - name: Prepare root envVariables (real values) content file
+      ansible.builtin.blockinfile:
+        path: "{{ terraform_outputs }}/envVariables"
+        block: |
+          vpn_cidr = "{{ resources.vpn.cidr }}"
+        marker: "#REMOVE_ME"
+
+    ##################
+    # FINAL CLEAN-UP #
+    ##################
+
+    - name: Clean "#REMOVE_ME" unwanted markers for previous Module block insertions
+      ansible.builtin.lineinfile:
+        path: "{{ module_outputs }}/{{ item }}"
+        state: absent
+        regexp: '#REMOVE_ME'
+      loop: ["variables.tf", "main.tf", "outputs.tf"]
+
+
+    - name: Clean "#REMOVE_ME" unwanted markers for previous Root block insertions
+      ansible.builtin.lineinfile:
+        path: "{{ terraform_outputs }}/{{ item }}"
+        state: absent
+        regexp: '#REMOVE_ME'
+      loop: ["variables.tf", "main.tf", "outputs.tf", "envVariables"]

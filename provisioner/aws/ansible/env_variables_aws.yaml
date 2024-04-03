@@ -67,6 +67,14 @@ resources:
             # This is a sample public IP
             source: 45.85.127.50/32
 
+          - name: Allow RDP Traffic for my target IP 2
+            protocol: TCP
+            portRange:
+              start: 3389
+              end: 3389
+            # This is a sample public IP
+            source: 88.17.97.238/32
+
           - name: Allow SSH Traffic for my target IP
             protocol: TCP
             portRange:
@@ -115,7 +123,7 @@ resources:
     count: 1
     options:
       name: "windows"
-      ami: "ami-00ffeb610527f540b"
+      ami: "ami-0f00a31129b3158a1"
       instance_type: "m5.4xlarge"
       volumes:
         size: 100
@@ -138,3 +146,8 @@ resources:
           # If internet gateway creation is enabled and target is "playbook", it will use the id of the current generated internet gateway id.
           # Otherwise an internet gateway id must be specified here (Check # IMPORTANT-IG-ID).
           target: playbook
+  vpn:
+    enabled: true
+    domain: example.com
+    organization: Example
+    cidr: 10.0.0.0/16
