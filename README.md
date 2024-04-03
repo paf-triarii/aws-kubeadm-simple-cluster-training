@@ -1,381 +1,245 @@
-<a name="readme-top"></a>
-
-<!-- 
+<div align="center">
+<!--
   REMEMBER THAT AT THE END OF THE MARKDOWN PAGES, THERE IS A SECTION WITH ALL THE LINKS TO BE MODIFIED OR ADDED NEW.
   This increases readability.
  -->
 
-[![contributors-shield]][contributors-url]
-[![forks-shield]][forks-url]
-[![stars-shield]][stars-url]
-[![issues-shield]][issues-url]
-[![license-shield]][license-url]
-[![linkedin-shield]][linkedin-url]
-[![youtube-shield]][youtube-url]
-![twitter-shield]
-
-Don't forget to give the project a star if you liked it! Thanks again! :star2: :yellow_heart:
-
 <!-- PROJECT LOGO -->
-<br />
-<div align="center">
-  <a href="https://github.com/Code-Triarii/bets-scrapper-analytics-infra">
-    <img src="docs/img/logo.png" alt="Logo" width="100" height="100">
-  </a>
+# 📝 AWS EC2 Windows instance provider
 
-  <h3 align="center">BETS SCRAPPER ANALYTICS INFRA</h3>
+<!-- TECNOLOGIES -->
+![Terraform Badge](https://img.shields.io/badge/Terraform-844FBA?logo=terraform&logoColor=fff&style=flat)
+![Ansible Badge](https://img.shields.io/badge/Ansible-E00?logo=ansible&logoColor=fff&style=flat)
+![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 
-  <p align="center">
-    Focused on defining and operating the associated infrastructure to the Bets Scrapper Analytics project.
-    <br />
-    <a href="https://github.com/Code-Triarii/bets-scrapper-analytics-infra/issues">Report Bug</a>
-    ·
-    <a href="https://github.com/Code-Triarii/bets-scrapper-analytics-infra/issues">Request Feature</a>
-  </p>
+This is a simple (but effective) project that allows to quickly set-up windows instances in AWS environment.
+It includes the possibility of creating the VPC, subnet, security groups and more for you.
+
+You can place it as well in your existing VPC and create the subnet, or place it inside your existing subnet.
+
+It is quite flexible. Enjoy it!
+
+[Report Bug](https://github.com/Code-Triarii/aws-windows-provider/issues) · [Request Feature](https://github.com/Code-Triarii/aws-windows-provider/issues)
 </div>
 
+> [!CAUTION]
+> Change description Lorem ipsum for the project information
 
+> [!NOTE]
+> Do not forget to change **https://github.com/Code-Triarii/aws-windows-provider** with the actual URL of the project.
+
+> [!NOTE]
+> Do not forget to edit the following links when creating the project from the template.
 
 <!-- TABLE OF CONTENTS -->
-<details>
-  <summary><b>Index</b></summary>
-  <ol>
-    <li>
-      <a href="#about-the-project">About The Project</a>
-      <ul>
-        <li><a href="#built-with">Built With</a></li>
-        <li><a href="#architecture">Architecture</a></li>
-      </ul>
-    </li>
-    <li>
-      <a href="#getting-started">Getting Started</a>
-      <ul>
-        <li><a href="#prerequisites">Prerequisites</a></li>
-        <li><a href="#installation">Installation</a></li>
-      </ul>
-    </li>
-    <li><a href="#usage">Usage</a></li>
-    <li><a href="#roadmap">Roadmap</a></li>
-    <li><a href="#contributing">Contributing</a></li>
-    <li><a href="#license">License</a></li>
-    <li><a href="#contact">Contact</a></li>
-    <li><a href="#acknowledgments">Acknowledgments</a></li>
-  </ol>
-</details>
 
+## 📚 Table of contents
 
+- [📝 AWS EC2 Windows instance provider](#-aws-ec2-windows-instance-provider)
+  - [📚 Table of contents](#-table-of-contents)
+  - [💡 Details](#-details)
+    - [Resources](#resources)
+  - [🚀 Installation and Execution](#-installation-and-execution)
+    - [🔧 Installation](#-installation)
+      - [Local environment](#local-environment)
+      - [Docker](#docker)
+    - [💼 Usage](#-usage)
+      - [Locally](#locally)
+      - [With Docker](#with-docker)
+  - [📍 Roadmap](#-roadmap)
+  - [📎 Contributing](#-contributing)
+  - [📃 License](#-license)
+  - [👥 Contact](#-contact)
 
-<!-- ABOUT THE PROJECT -->
-## About The Project
+<!--te-->
 
-<p align="center">
-    <a href="https://github.com/Code-Triarii/bets-scrapper-analytics-infra">
-        <img src="docs/img/main.png" style="width: 500px; height: auto;" alt="Product Name Screen Shot">
-    </a>
-    <p align="center" style="color: lightgray; font-size: small; font-style: italic; padding: 0px; margin: 0px">TOEDIT: Modify the caption</p>
-</p>
+## 💡 Details
 
-<!-- PROJECT DETAILS -->
-</br>
-</br>
-</br>
-<table style="width: 100%; border-collapse: collapse;">
-    <tr>
-        <td style="font-weight: bold; padding: 8px; color: #4a579d">Purpose</td>
-        <td style="padding: 8px; text-align: left;">TOEDIT: text describing the purpose</td>
-    </tr>
-    <tr>
-        <td style="font-weight: bold; padding: 8px; color: #3a9ba5">Motivation</td>
-        <td style="padding: 8px; text-align: left;">TOEDIT: text describing what problems it solves</td>
-    </tr>
-    <tr>
-        <td style="font-weight: bold; padding: 8px; color: #2d6b99">Features</td>
-        <td style="padding: 8px; text-align: left;">
-            <ul>
-                <!-- TOEDIT: ADD HERE ALL THE LIST OF MAIN FEATURES OF THE PROJECT -->
-                <li>TOEDIT: Feature 1</li>
-                <li>Feature 2</li>
-                <li>Feature 3</li>
-            </ul>
-        </td>
-    </tr>
-</table>
+### Resources
 
+The main resources for this project are located inside `provisioner` folder where the Ansible code is located.
 
-### Built With
+Inside this folder we will find:
 
-<!-- TECHNOLOGIES TABLE -->
-<table style="width: 100%; border-collapse: collapse;">
-  <!-- THESE ARE THE ONES WITHOUT AVAILABLE BADGE AT shields.io -->
-    <!-- Docker -->
-    <tr>
-        <td style="text-align: left; width: 200px;">
-            <div style="background-color: #585858; padding: 5px 10px; display: inline-block; margin: 2px; font-family: Arial, sans-serif; font-size: 0.8em; font-weight: 800;">
-                <img src="docs/img/docker.png" style="width: 20px; height: auto; vertical-align: middle;" alt="Docker Logo"> 
-                <span style="color: white; vertical-align: middle;"><b>DOCKER</b></span>   
-            </div>
-        </td>
-        <td style=" text-align: left;">TOEDIT: Usage</td>
-    </tr>
-    <!-- Kubernetes -->
-    <tr>
-        <td style="text-align: left; max-width: 100px;">
-            <div style="background-color: black; padding: 5px 10px; display: inline-block; margin: 2px; font-family: Arial, sans-serif; font-size: 0.8em; font-weight: 800;">
-                <img src="docs/img/kubernetes.png" style="width: 20px; height: auto; vertical-align: middle;" alt="Kubernetes Logo"> 
-                <span style="color: white; vertical-align: middle;"><b>KUBERNETES</b></span>   
-            </div>
-        </td>
-        <td style=" text-align: left;">TOEDIT: Usage</td>
-    </tr>
-    <!-- THE FOLLOWING STYLE IS FOR THE ONES THAT HAVE AN AVAILABLE BADGE AT shields.io -->
-    <!-- React -->
-    <tr>
-        <td style=" text-align: left; max-width: 100px;">
-            <div style="padding: 5px 10px; display: inline-block; margin: 2px; font-family: Arial, sans-serif; font-size: 0.8em; font-weight: 800;">
-                <img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" style="height: auto; vertical-align: middle;" alt="React Logo"> 
-            </div>
-        </td>
-        <td style="text-align: left;">TOEDIT: Usage</td>
-    </tr>
-    <!-- Python -->
-    <tr>
-        <td style=" text-align: left; max-width: 100px;">
-            <div style="padding: 5px 10px; display: inline-block; margin: 2px; font-family: Arial, sans-serif; font-size: 0.8em; font-weight: 800;">
-                <img src="https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54" style="height: auto; vertical-align: middle;" alt="Python Logo"> 
-            </div>
-        </td>
-        <td style="text-align: left;">TOEDIT: Usage</td>
-    </tr>
-</table>
+- `aws`:
+  - `ansible`: containing the Ansible configuration, the different related playbooks (all started with `main.yml`) and the [env_variables_aws.yaml](./provisioner/aws/ansible/env_variables_aws.yaml) containing the changeable configuration.
+    - `modules`: those define the specific behavior for preparing the AWS related resources (`Internet Gateway, Instances, Route Tables, Security Groups, Subnet and VPCs`)
+- `filter_plugins`: Global plugins that are used for simplification of some tasks.
+- `Dockerfile`: for building the image to run the Ansible and Terraform dynamically generated project without having to install anything besides `Docker`.
+- `.dockerignore`: To exclude some files from the image build for security and *keeping it clean* purposes.
+- `password_retriever.py`: Utility for getting the password in clear text for the windows instance decrypting it using the private key for the instance.
+  
+> [!IMPORTANT]
+> Do not forget to set the ANSIBLE_FILTER_PLUGINS environment variable to the absolute path where the custom_filters are located with the actual path of the project.
 
-</br>
-Other utilities, dependencies and plugins are listed below in <b>acknowledges</b> section
-<!-- END TECHNOLOGIES TABLE -->
+## 🚀 Installation and Execution
 
+### 🔧 Installation
 
+#### Local environment
 
-### Architecture
+1. Install Python.
 
-<p align="center">
-    <img src="docs/img/arch.png" style="width: 500px; height: auto;" alt="Architecture">
-    <p align="center" style="color: lightgray; font-size: small; font-style: italic; padding: 0px; margin: 0px">Project Architecture</p>
-</p>
+```bash
+sudo apt-get update && apt-get install -y python3 python3-pip
+```
 
-<b>Components</b>
+2. Install Ansible:
 
-* `CLI`: All the files in this project.
-  * `main.py`: Main handler that orchestrates
-  * `dispatcher.py`: Dispatches services
-* `API Server`: serves the responses to CLI Requests. The related project can be located [TOEDIT: HERE](https://example.com)
+```bash
+pip install ansible==9.4.0
+```
 
+3. Install Ansible collection for aws:
 
-<b>Modules</b>:
+```bash
+ansible-galaxy collection install amazon.aws
+```
 
-* `providers`: This folder includes the different `Ansible` and `Terraform` playbooks for provisioning the infrastructure for the different cloud providers.
-    * `aws`: Contains the main Ansible code to generate the Terraform one dynamically for deploying target infrastructure like the one specified in this [TOEDIT: This Diagram]()
-    * `filter_plugins`: contains the custom filters created to be reused accross the projects.
+4. Install boto3 with pip.
 
-    <blockquote style="border-left: 4px solid red; background-color: lightgray; padding: 10px; text-align: left;">
-    <strong><span style="color: red;">Note:</span></strong> <span style="color: black;">Do not forget to set the ANSIBLE_FILTER_PLUGINS environment variable to the absolute path where the custom_filters are located</b> with the actual URL of the project.</span>
-    </blockquote>
+```bash
+pip3 install boto3 botocore
+```
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+5. Install Terraform following [Official instructions from Hashicorp documentation](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli).
 
+> [!TIP]
+> You can decide which version to install by checking [PIP Ansible release history](https://pypi.org/project/ansible/#history)
 
-<!-- GETTING STARTED -->
-## Getting Started
+#### Docker
 
-In this section we hope to explain thoroughly how to get things going seemingly. 
-Please read carefully and <b>May the force be with you</b> :hatched_chick: :hatched_chick: :hatched_chick:
+You just have to build the Docker image!
 
-### Prerequisites
+```bash
+docker build provisioner -f provisioner/Dockerfile -t windows-provider:1.0 \
+--build-arg UID=$(id -u) --build-arg GID=$(id -g) --build-arg USER=$(id -un) --build-arg GROUP=$(id -gn)
+```
 
-- Local Execution:
-    * `Terraform`
-    * `Ansible`
-- Docker Execution:
-    * `Docker` installed in the system: [Installation Instructions](https://docs.docker.com/engine/install/ubuntu/)
+### 💼 Usage
 
-### Installation
+> [!IMPORTANT]
+> Do not forget to set at least your public IP in the rules of the security groups to be able to access using the SSH generated key after launching the playbook.
 
 #### Locally
 
-1. Select the type of provisioner to use for terrafor
-2. Clone the repo
-   ```sh
-   git clone https://github.com/your_username_/Project-Name.git
-   ```
-3. Install NPM packages
-   ```sh
-   npm install
-   ```
-4. Enter your API in `config.js`
-   ```js
-   const API_KEY = 'ENTER YOUR API';
-   ```
+1. Set the required environment variables. If you do not have such, please check Amazon documentation on how to generate those here.
+
+```bash
+export AWS_REGION="eu-west-2"
+export AWS_ACCESS_KEY_ID="REAL_VALUE_OF_AWS_ACCESS_KEY_ID"
+export AWS_SECRET_ACCESS_KEY="REAL_VALUE_OF_AWS_SECRET_ACCESS_KEY"
+```
+
+2. Remember to change the [Ansible env variables as your desired configuration](./provisioner/aws/ansible/env_variables_aws.yaml).
+
+3. Ensure to set the filter plugins env variable and make those available:
+
+```bash
+cp -r provisioner/filter_plugins ${HOME}
+export ANSIBLE_FILTER_PLUGINS="${HOME}/filter_plugins"
+```
+
+4. Run the playbook.
+
+```bash
+ansible-playbook provisioner/aws/main.yaml -vv
+```
+
+5. When the Terraform playbook has been generated, initialize and apply the project.
+
+```bash
+cd <outputs-folder-dynamically-calculated>
+terraform init
+terraform plan -var-file=envVariables --out tfplan
+terraform apply tfplan
+```
+
+6. Obtain the password for the instance.
+
+```bash
+python3 provisioner/password_retriever.py  <bsa_auto_infra_sbt_0_password_data-value-showed-in-console> $(find $(pwd) -type d -name infra-provision*)/bsa-auto-infra/modules/key/bsa_auto_infra_sbt_key_0.pem
+```
+
+7. Use `Remote Desktop` from your instance to connect. Creds: `Administrator:<your-decrypted-password>`
 
 #### With Docker
 
-1. Create the required images for running the project.
+If you have built the image and adapted the [Ansible env variables as your desired configuration](./provisioner/aws/ansible/env_variables_aws.yaml), then you just need to execute this!
 
-    ```bash
-        cd provisioner
-        docker build . -f Dockerfile -t terraform-generator:1.0
-    ```
+```bash
+docker run --user $(id -u):$(id -g) -v $(pwd)/provisioner:/app  -e AWS_ACCESS_KEY_ID="" -e AWS_SECRET_ACCESS_KEY="" \
+-e AWS_REGION="eu-west-2"   -e VERBOSITY="-vvv" -e ANSIBLE_FILTER_PLUGINS=/app/filter_plugins windows-provider:1.0
+```
 
-2. Execute the Docker Container for an specific project
-
-    ```bash
-        docker run --user $(id -u):$(id -g) -v $(pwd):/app  -e AWS_ACCESS_KEY_ID="" -e AWS_SECRET_ACCESS_KEY="" \
-        -e AWS_REGION="eu-west-1"   -e VERBOSITY="-vvv" -e ANSIBLE_FILTER_PLUGINS=/app/filter_plugins terraform-generator:1.0 ansible-playbook aws/ansible/main.yaml -vv 
-    ```
+> [!IMPORTANT]
+> Do not forget to set the real values for `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`.
 
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
-
-<!-- USAGE EXAMPLES -->
-## Usage
-
----
-
-TOEDIT: Use this space to show useful examples of how a project can be used. Additional screenshots, code examples and demos work well in this space. You may also link to more resources. 
-* CLI: In this case show the help and put some examples of the most interesting options
-* Web Application: if the project is a component of a broader project, link it ot the main Documentation for the project usage and especify only the specific configurations for the component. Example: if this is the front end, talk about the specific options that can be configured.
-
----
-
-_For more examples, please refer to the [Documentation](https://example.com)_
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
+Do not forget to follow step `6` and `7` from [Usage > Locally](#locally)
 
 <!-- ROADMAP -->
-## Roadmap
+## 📍 Roadmap
 
-- [x] Add Changelog
-- [x] Add back to top links
-- [ ] Add Additional Templates w/ Examples
-- [ ] Add "components" document to easily copy & paste sections of the readme
-- [ ] Multi-language Support
-    - [ ] Chinese
-    - [ ] Spanish
-
-See the [open issues](https://github.com/Code-Triarii/bets-scrapper-analytics-infra/issues) for a full list of proposed features (and known issues).
-
-For a more detailed understanding of the project progress, check the <a href="docs/CHANGELOG.md">CHANGELOG</a>
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+- [x] Support for AWS
+- [x] Support flexibility in creating the Terraform through ansible.
+- [x] Creates: VPC, Subnet, Internet Gateway, Security Groups, SSH keys and instances linking all the objects as required.
 
 
+See the [open issues](https://github.com/Code-Triarii/aws-windows-provider/issues) for a full list of proposed features (and known issues).
+
+[🔝 Back to top](#-aws-ec2-windows-instance-provider)
 
 <!-- CONTRIBUTING -->
-## Contributing
+## 📎 Contributing
 
 Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated** :chart:.
 
 If you have a suggestion that would make this better, please fork the repo and create a pull request. You can also simply open an issue with the tag "enhancement".
 
 1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
+2. Create your Feature Branch
+   ```sh
+   git checkout -b feature/AmazingFeature
+   ```
+3. Commit your Changes
+   ```sh
+   git commit -m 'Add some AmazingFeature
+   ```
+4. Push to the Branch
+   ```sh
+   git push origin feature/AmazingFeature
+   ```
 5. Open a Pull Request
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
+[🔝 Back to top](#-aws-ec2-windows-instance-provider)
 
 <!-- LICENSE -->
-## License
+## 📃 License
 
-Distributed under the `TOEDIT: LICENSE_TYPE_TO_REPLACE` License. See `LICENSE` for more information.
+Distributed under the `Apache 2.0` License. See [LICENSE](./LICENSE) for more information.
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
+[🔝 Back to top](#-aws-ec2-windows-instance-provider)
 
 <!-- CONTACT -->
-## Contact
+## 👥 Contact
+
+<div align="center">
+
+[![X](https://img.shields.io/badge/X-%23000000.svg?style=for-the-badge&logo=X&logoColor=white)](https://twitter.com/codetriariism)
+[![TikTok](https://img.shields.io/badge/TikTok-%23000000.svg?style=for-the-badge&logo=TikTok&logoColor=white)](https://www.tiktok.com/@codetriariism)
+[![Medium](https://img.shields.io/badge/Medium-12100E?style=for-the-badge&logo=medium&logoColor=white)](https://medium.com/@codetriariism)
+[![YouTube](https://img.shields.io/badge/YouTube-%23FF0000.svg?style=for-the-badge&logo=YouTube&logoColor=white)](https://www.youtube.com/@CodeTriariiSM)
+[![Instagram](https://img.shields.io/badge/Instagram-%23E4405F.svg?style=for-the-badge&logo=Instagram&logoColor=white)](https://www.instagram.com/codetriariismig/)
+
+</div>
 
 As we always state, our main purpose is keep learning, contributing to the community and finding ways to collaborate in interesting initiatives.
 Do not hesitate to contact us at `codetriariism@gmail.com`
 
 If you are interested in our content creation, also check our social media accounts. We have all sorts of training resources, blogs, hackathons, write-ups and more!
-Do not skip it, you will like it :smirk: :smirk: :smirk:
+Do not skip it, you will like it :smirk: :smirk: :smirk: :+1:
 
-<table>
-    <tr>
-        <td><img src="docs/img/sm/ig.png" style="width: 20px; height: auto;" alt="Instagram" /></td>
-        <td><a href="https://www.instagram.com/codetriariismig/">Instagram</a></td>
-    </tr>
-    <tr>
-        <td><img src="docs/img/sm/yt.png" style="width: 20px; height: auto;" alt="YouTube" /></td>
-        <td><a href="https://www.youtube.com/@CodeTriariiSM">YouTube</a></td>
-    </tr>
-    <tr>
-        <td><img src="docs/img/sm/medium.png" style="width: 20px; height: auto;" alt="Medium" /></td>
-        <td><a href="https://medium.com/@codetriariism">Medium</a></td>
-    </tr>
-    <tr>
-        <td><img src="docs/img/sm/tiktok.png" style="width: 20px; height: auto;" alt="TikTok" /></td>
-        <td><a href="https://www.tiktok.com/@codetriariism">TikTok</a></td>
-    </tr>
-    <tr>
-        <td><img src="docs/img/sm/twitter.png" style="width: 20px; height: auto;" alt="X (Former Twitter)" /></td>
-        <td><a href="https://twitter.com/codetriariism">Twitter</a></td>
-    </tr>
-</table>
+Don't forget to give the project a star if you liked it! Thanks again! :star2: :yellow_heart:
 
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
-
-<!-- ACKNOWLEDGMENTS -->
-## Acknowledgments
-
-:100: :100: :100: For those that are curious about some of the resources or utilities and for sure thanking and giving credit to authors, we provide you a list of the most interesting ones (in our understanding) :100: :100: :100:
-
-* [Choose an Open Source License](https://choosealicense.com)
-* [GitHub Emoji Cheat Sheet](https://www.webpagefx.com/tools/emoji-cheat-sheet)
-* [Malven's Flexbox Cheatsheet](https://flexbox.malven.co/)
-* [Malven's Grid Cheatsheet](https://grid.malven.co/)
-* [Img Shields](https://shields.io)
-* [GitHub Pages](https://pages.github.com)
-* [Font Awesome](https://fontawesome.com)
-* [React Icons](https://react-icons.github.io/react-icons/search)
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
-
-<!-- MARKDOWN LINKS & IMAGES -->
-<!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
-[contributors-shield]: https://img.shields.io/github/contributors/othneildrew/Best-README-Template.svg?style=for-the-badge
-[contributors-url]: https://github.com/Code-Triarii/bets-scrapper-analytics-infra/graphs/contributors
-[forks-shield]: https://img.shields.io/github/forks/othneildrew/Best-README-Template.svg?style=for-the-badge
-[forks-url]: https://github.com/Code-Triarii/bets-scrapper-analytics-infra/network/members
-[stars-shield]: https://img.shields.io/github/stars/othneildrew/Best-README-Template.svg?style=for-the-badge
-[stars-url]: https://github.com/Code-Triarii/bets-scrapper-analytics-infra/stargazers
-[issues-shield]: https://img.shields.io/github/issues/othneildrew/Best-README-Template.svg?style=for-the-badge
-[issues-url]: https://github.com/Code-Triarii/bets-scrapper-analytics-infra/issues
-[license-shield]: https://img.shields.io/github/license/othneildrew/Best-README-Template.svg?style=for-the-badge
-[license-url]: https://github.com/Code-Triarii/bets-scrapper-analytics-infra/blob/master/LICENSE
-
-<!-- SOCIAL MEDIA -->
-[linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=gray
-[linkedin-url]: https://example.com
-
-[youtube-shield]: https://img.shields.io/badge/YouTube-red?style=for-the-badge&logo=youtube&logoColor=white
-[youtube-url]: https://www.youtube.com/@CodeTriariiSM
-
-[instagram-shield]: https://img.shields.io/badge/Instagram-E4405F?style=for-the-badge&logo=instagram&colorB=pink
-[instagram-url]: https://www.instagram.com/codetriariismig/
-
-[twitter-shield]: https://img.shields.io/twitter/follow/codetriariism
-
-<!-- PROJECT RELATED -->
-[product-brand-image]: docs/img/main.png
+[🔝 Back to top](#-aws-ec2-windows-instance-provider)

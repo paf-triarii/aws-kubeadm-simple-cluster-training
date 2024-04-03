@@ -1,7 +1,7 @@
 root:
   # Flag the decides if the terraform files are generated using the playbook
   prepare: true
-  # TODO: Decide if implementing here the creation or handle it outside of this playbook. See parttens to see common reusability
+  # Decides if the terraform generated resources are going to be created.
   write: true
   terraform:
     location: ../terraform_templates
@@ -14,7 +14,7 @@ root:
 
 resources:
   tags:
-    OWNER: APPSEC
+    OWNER: AUTOMATION_TEAM
     PURPOSE: AUTOMATION
   vpc:
     enabled: true
@@ -65,7 +65,7 @@ resources:
               start: 3389
               end: 3389
             # This is a sample public IP
-            source: 88.17.97.213/32
+            source: 45.85.127.50/32
 
           - name: Allow SSH Traffic for my target IP
             protocol: TCP
@@ -73,7 +73,7 @@ resources:
               start: 22
               end: 22
             # This is a sample public IP
-            source: 88.17.97.213/32
+            source: 45.85.127.50/32
         egress:
           - name: Allow all traffic to same VPC
             # This indicates all the protocols ("-1" also works as an equivalent)
@@ -86,13 +86,6 @@ resources:
             # IMPORTANT: To enable this rule, ensure that matches the resources.vpc.options.cidr_block
             # TODO: Create automation so it "Self VPC" inputs the VPC id either pre-existing or generated instead of having to have the exact value.
             destination: 10.15.0.0/20
-
-          - name: Allow Splunk
-            protocol: TCP
-            portRange:
-              start: 9997
-              end: 9997
-            destination: 0.0.0.0/0
 
           - name: Allow Common internet 80
             protocol: TCP
@@ -121,7 +114,7 @@ resources:
     enabled: true
     count: 1
     options:
-      name: "i"
+      name: "windows"
       ami: "ami-00ffeb610527f540b"
       instance_type: "m5.4xlarge"
       volumes:

@@ -1,14 +1,14 @@
-FROM hashicorp/terraform:1.4.2@sha256:2734886211a482abaff7efbbfd8bdb32295c9c35dda124092d46f39b69f47c42 as terraform
+FROM hashicorp/terraform:1.7 as terraform
 
 
-FROM ubuntu:jammy@sha256:67211c14fa74f070d27cc59d69a7fa9aeff8e28ea118ef3babc295a0428a6d21
+FROM ubuntu:jammy-20240227
 
 # This are the environment variables used for Terraform authentication.
 # For security reasons are left blank in the image definition
 # Those should be passed as parameter in the docker run execution.
 ENV AWS_ACCESS_KEY_ID=""
 ENV AWS_SECRET_ACCESS_KEY=""
-ENV AWS_REGION="eu-west-1"
+ENV AWS_REGION="eu-west-2"
 ENV VERBOSITY="--vvv"
 
 
@@ -28,12 +28,11 @@ RUN apt-get update \
 
 # This are Ansible requirements for being able to use AWS tasks/modules
 RUN ansible-galaxy collection install amazon.aws 
-RUN pip3 install boto3 botocore
+
+RUN pip install boto3 botocore
 
 RUN apt-get update \
-  && apt-get install -y jq \
-  && wget -qO /usr/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 \
-  && chmod a+x /usr/bin/yq
+  && apt-get install -y jq
 
 ##############################################################
 
@@ -57,4 +56,9 @@ RUN echo "${USER} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/10-user
 
 ##############################################################
 
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
 USER ${UID}:${GID}
+
+ENTRYPOINT ["/entrypoint.sh"]
