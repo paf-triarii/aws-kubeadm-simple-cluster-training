@@ -67,6 +67,9 @@ Inside this folder we will find:
 
 ### 🔧 Installation
 
+> [!CAUTION]
+> Remember to review the env variables. This playbook is prepared for `eu-west-2 (London)`. Since the `ami`s are region-based. Select the appropriate ami for other region.
+
 #### Local environment
 
 1. Install Python.
