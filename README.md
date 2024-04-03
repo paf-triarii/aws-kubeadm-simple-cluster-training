@@ -10,7 +10,7 @@
 <!-- TECNOLOGIES -->
 ![Terraform Badge](https://img.shields.io/badge/Terraform-844FBA?logo=terraform&logoColor=fff&style=flat)
 ![Ansible Badge](https://img.shields.io/badge/Ansible-E00?logo=ansible&logoColor=fff&style=flat)
-![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+![Docker Badge](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=fff&style=flat)
 
 This is a simple (but effective) project that allows to quickly set-up windows instances in AWS environment.
 It includes the possibility of creating the VPC, subnet, security groups and more for you.
@@ -21,15 +21,6 @@ It is quite flexible. Enjoy it!
 
 [Report Bug](https://github.com/Code-Triarii/aws-windows-provider/issues) · [Request Feature](https://github.com/Code-Triarii/aws-windows-provider/issues)
 </div>
-
-> [!CAUTION]
-> Change description Lorem ipsum for the project information
-
-> [!NOTE]
-> Do not forget to change **https://github.com/Code-Triarii/aws-windows-provider** with the actual URL of the project.
-
-> [!NOTE]
-> Do not forget to edit the following links when creating the project from the template.
 
 <!-- TABLE OF CONTENTS -->
 
