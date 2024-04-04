@@ -182,7 +182,7 @@ python3 provisioner/password_retriever.py  <bsa_auto_infra_sbt_0_password_data-v
 
 5. Insert the client certificates in the downloaded file. Check the illustration for the format.
 
-```
+```bash
 terraform_outputs=$(find $(pwd) -type d -name infra-provision*)
 cat ${terraform_outputs}/bsa-auto-infra/modules/vpn/pki_certs/client.crt
 cat ${terraform_outputs}/bsa-auto-infra/modules/vpn/pki_certs/client.key

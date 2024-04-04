@@ -154,18 +154,30 @@
           resource "aws_ec2_client_vpn_network_association" "{{ vpn_name }}" {
             client_vpn_endpoint_id = aws_ec2_client_vpn_endpoint.{{ vpn_name }}.id
             subnet_id              = var.subnet_id
+            timeouts {
+              create = "15m"
+              delete = "15m"
+            }
           }
 
           resource "aws_ec2_client_vpn_authorization_rule" "{{ vpn_name }}" {
             client_vpn_endpoint_id = aws_ec2_client_vpn_endpoint.{{ vpn_name }}.id
             target_network_cidr    = "0.0.0.0/0"
             authorize_all_groups   = true
+            timeouts {
+              create = "15m"
+              delete = "15m"
+            }
           }
 
           resource "aws_ec2_client_vpn_route" "{{ vpn_name }}" {
             client_vpn_endpoint_id = aws_ec2_client_vpn_endpoint.{{ vpn_name }}.id
             destination_cidr_block = "0.0.0.0/0"
             target_vpc_subnet_id   = var.subnet_id
+            timeouts {
+              create = "15m"
+              delete = "15m"
+            }
           }
         marker: "#REMOVE_ME"
 
