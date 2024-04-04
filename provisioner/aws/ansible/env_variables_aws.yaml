@@ -123,8 +123,13 @@ resources:
     count: 1
     options:
       name: "windows"
-      ami: "ami-0f00a31129b3158a1"
-      instance_type: "m5.4xlarge"
+      ami:
+        eu-south-2: "ami-0a71f7e0e2d92a151"
+        eu-west-1: "ami-0aa99174e2f8adfb4"
+        eu-west-2: "ami-0c618421e207909d0"
+        eu-west-3: "ami-0a1491ab12bfc93df"
+        eu-central-1: "ami-0e9ea35223a924666"
+      instance_type: "t3.2xlarge"
       volumes:
         size: 100
         delete_on_termination: true

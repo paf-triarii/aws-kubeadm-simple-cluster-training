@@ -69,7 +69,7 @@ Inside this folder we will find:
 ### 🔧 Installation
 
 > [!CAUTION]
-> Remember to review the env variables. This playbook is prepared for `eu-west-2 (London)`. Since the `ami`s are region-based. Select the appropriate ami for other region.
+> Remember to review the env variables. This playbook has direct support for several regions but do not cover all. Include your region and ami if missing in the list.
 
 #### Local environment
 
@@ -196,8 +196,8 @@ cat ${terraform_outputs}/bsa-auto-infra/modules/vpn/pki_certs/client.key
 - [x] Support for AWS
 - [x] Support flexibility in creating the Terraform through ansible.
 - [x] Creates: VPC, Subnet, Internet Gateway, Security Groups, SSH keys and instances linking all the objects as required.
-- [x] Include creation of client vpn endpoint with self-signed certificates (not recommended for production set up)
-
+- [x] Include creation of client vpn endpoint with self-signed certificates (not recommended for production set up).
+- [x] Support for more regions. 
 
 See the [open issues](https://github.com/Code-Triarii/aws-windows-provider/issues) for a full list of proposed features (and known issues).
 

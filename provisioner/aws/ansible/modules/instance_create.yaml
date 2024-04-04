@@ -188,11 +188,15 @@
       loop_control:
         index_var: l_index
 
+    - name: Get AWS_REGION from environment
+      ansible.builtin.set_fact:
+        aws_region: "{{ lookup('env', 'AWS_REGION') }}"
+
     - name: Prepare root envVariables (real values) content file
       ansible.builtin.blockinfile:
         path: "{{ terraform_outputs }}/envVariables"
         block: |
-          instance_ami = "{{ resources.instance.options.ami }}"
+          instance_ami = "{{ resources.instance.options.ami[aws_region] }}"
           instance_type = "{{ resources.instance.options.instance_type }}"
         marker: "#REMOVE_ME"
 
