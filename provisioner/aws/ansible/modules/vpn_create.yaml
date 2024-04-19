@@ -195,7 +195,7 @@
             vpn_cidr = var.vpn_cidr
             security_group_id = module.aws_security_group.security_group_id
             vpc_id = module.aws_vpc.vpc_id
-            subnet_id = module.aws_subnet.subnet_id
+            subnet_id = module.aws_subnet.subnet_id_private
             tags = var.tags
           }
         marker: "#REMOVE_ME"

@@ -1,4 +1,4 @@
-- name: Subnet Internet gateway Preparation
+- name: Internet gateway Preparation
   hosts: localhost
   vars_files: ../env_variables_aws.yaml
 
