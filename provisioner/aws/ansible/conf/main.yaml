@@ -1,13 +1,36 @@
-- name: Internet gateway Preparation
-  hosts: masters:workers
+- name: Configure kubernetes cluster
+  hosts: localhost
   vars_files: ../env_variables_aws.yaml
   tasks:
     - name: Check if success file exists
       ansible.builtin.stat:
         path: "{{ terraform_outputs }}/success"
       register: success_file
-      delegate_to: localhost
 
-    - name: Import playbook
-      ansible.builtin.include_tasks: install_dependencies.yaml
-      when: success_file_exists
+    - name: Set fact
+      ansible.builtin.set_fact:
+        success_file_exists: "{{ success_file.stat.exists }}"
+
+- name: Reset kubernetes cluster for idempotency
+  hosts: masters:workers
+  vars_files: ../env_variables_aws.yaml
+  tasks:
+    - name: Ensure reset kubernetes cluster 
+      shell: |
+        kubeadm reset -f
+        rm -rf /etc/kubernetes/*
+      become: true
+      when: hostvars['localhost']['success_file_exists']
+
+
+- name: Import playbook
+  ansible.builtin.import_playbook: install_dependencies.yaml
+  when: hostvars['localhost']['success_file_exists']
+
+- name: Import playbook
+  ansible.builtin.import_playbook: initialize_master.yaml
+  when: hostvars['localhost']['success_file_exists']
+
+- name: Import playbook
+  ansible.builtin.import_playbook: join_workers.yaml
+  when: hostvars['localhost']['success_file_exists']

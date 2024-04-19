@@ -124,7 +124,7 @@ resources:
     enabled: true
     options:
       name: "ig"
-    # IMPORTANT-IG-ID: In case of using an existing internet gateway, remember to include the id in the routes for internet access resources.route_table.options.routes[0].target
+  # IMPORTANT-IG-ID: In case of using an existing internet gateway, remember to include the id in the routes for internet access resources.route_table.options.routes[0].target
   nat_gateway:
     enabled: true
     options:
@@ -165,6 +165,10 @@ utils:
   python:
     enabled: true
     version: "3.12"
+  crio:
+    enabled: true
+    version: "1.29"
+    os: "xUbuntu_22.04"
   aws:
     enabled: true
   azure:
@@ -184,3 +188,29 @@ utils:
     enabled: true
   helm:
     enabled: true
+
+addOns:
+  createNamespaces: true
+  namespaces:
+    - apps
+    - datastorage
+    - monitoring
+  cni:
+    calico:
+      enabled: true
+      version: "v3.27.3"
+      cidr: "192.168.0.0/16"
+  storageClass:
+    enabled: false
+    name: gp2
+    provisioner: kubernetes.io/aws-ebs
+    # Only accept valid parameters
+    # It will variate depending on the target cloud.
+    # This configuration is for aws
+    # If no parameters desired, an empty dict should be passed {}
+    parameters:
+      fsType: ext4
+      # Double Quotes MUST be used in booleans
+      entrypted: "true"
+      type: gp2
+      # zones: eu-west-1b

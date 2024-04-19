@@ -1,0 +1,107 @@
+- name: Initialize Kubeadm in main master
+  hosts: masters[0]
+  vars_files:
+    - ../env_variables_aws.yaml
+  tasks:
+    - name: Prepare reusable fact
+      ansible.builtin.set_fact:
+        terraform_outputs: "{{ root.outputs.location }}/{{ root.terraform.prefix }}"
+
+    - name: Kubeadm init
+      shell: |
+        kubeadm init --cri-socket unix:///var/run/crio/crio.sock --control-plane-endpoint "{{ ansible_hostname }}:6443" \
+        --pod-network-cidr={{ addOns.cni.calico.cidr }} \
+        --service-cidr=10.96.0.0/12
+      register: kubeadm_output
+      become: true
+
+  
+    - name: Ensure idempotency removing file first
+      shell: rm -rf /tmp/kubeadm_output
+
+    - name: your local file on master node
+      ansible.builtin.file:
+        path: /tmp/kubeadm_output
+        mode: '0644'
+        state: touch
+      become: true
+
+    - name: Print output to file
+      ansible.builtin.copy:
+        content: "{{ kubeadm_output.stdout }}"
+        dest: /tmp/kubeadm_output
+        mode: '0644'
+      become: true
+
+    # Ref: https://stackoverflow.com/questions/7451423/how-to-show-only-next-line-after-the-matched-one
+    - name: Get full join command
+      ansible.builtin.shell:
+        cat /tmp/kubeadm_output | grep '\-\-certificate-key' -B 2
+      register: join_command
+      become: true
+
+    - name: Get List join_command
+      ansible.builtin.set_fact:
+        join_command: "{{ join_command.stdout | split(' ') }}"
+
+    - name: Prepare variables
+      ansible.builtin.set_fact:
+        token: "{{ join_command[6] }}"
+        hash: "{{ join_command[8] }}"
+        cert_key: "{{ join_command[11] }}"
+      register: join_options
+
+    - name: Get kubeconfig
+      ansible.builtin.fetch:
+        src: "/etc/kubernetes/admin.conf"
+        dest: "{{ terraform_outputs }}/kubeconfig"
+        flat: true
+      become: true
+
+- name: Configure kubernetes cluster
+  hosts: localhost
+  vars_files: ../env_variables_aws.yaml
+  tasks:
+  - name: Check if target variable is in accepted ones
+    ansible.builtin.set_fact:
+      ubuntu_target: "{{ target in ['ubuntu_22_04', 'ubuntu_20_04', 'ubuntu_23_10'] }}"
+      kube_version: "{{ utils.kubernetes.version }}"
+
+  # Ref: https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/
+
+  - name: Install Google Cloud public signing key
+    ansible.builtin.shell: |
+      mkdir -p -m 755 /etc/apt/keyrings
+      curl -fsSL https://pkgs.k8s.io/core:/stable:/v{{ kube_version.split('.')[0:2] | join('.') }}/deb/Release.key \
+      | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+    become: true
+    when: ubuntu_target
+
+  - name: Add Kubernetes repository
+    ansible.builtin.shell: |
+      echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.29/deb/ /' \
+      | tee /etc/apt/sources.list.d/kubernetes.list
+    become: true
+    when: ubuntu_target
+
+  - name: Update APT and cache
+    ansible.builtin.apt:
+      update_cache: true
+    become: true
+    when: ubuntu_target
+
+  - name: Install kubectl
+    ansible.builtin.apt:
+      name: "kubectl={{ kube_version }}"
+      state: present
+    become: true
+    when: ubuntu_target and utils.kubernetes.kubectl
+    register: kubectl_result
+    ignore_errors: true
+
+  - name: Install kubectl if specific version is not available
+    ansible.builtin.apt:
+      name: kubectl
+      state: present
+    become: true
+    when: ubuntu_target and utils.kubernetes.kubectl and kubectl_result.failed

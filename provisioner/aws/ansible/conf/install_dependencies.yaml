@@ -28,6 +28,11 @@
         file: dependencies/gcloud.yml
       when: utils.gcloud.enabled
 
+    - name: Install crio
+      ansible.builtin.include_tasks:
+        file: dependencies/crio.yml
+      when: utils.crio.enabled
+
     - name: Install jq-yq
       ansible.builtin.include_tasks:
         file: dependencies/jq-yq.yml

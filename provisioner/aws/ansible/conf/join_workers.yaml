@@ -1,0 +1,19 @@
+- name: Initialize Workers 
+  vars_files:
+    - ../env_variables_aws.yaml
+  tasks:
+    - name: Prepare reusable fact
+      ansible.builtin.set_fact:
+        terraform_outputs: "{{ root.outputs.location }}/{{ root.terraform.prefix }}"
+
+    - name: Prepare variables 
+      set_fact:
+        token: "{{ hostvars[groups['masters'][0]]['token'] }}"
+        hash: "{{ hostvars[groups['masters'][0]]['hash'] }}"
+
+    - name: Kubeadm join
+      shell: |
+        kubeadm join "{{ cluster.dns }}:{{ cluster.apiPort }}" \
+        --token {{token}} --discovery-token-ca-cert-hash {{hash}}
+      register: kubeadm_output
+      become: true

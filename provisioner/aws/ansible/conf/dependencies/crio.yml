@@ -1,0 +1,95 @@
+- name: Check if target variable is in accepted ones
+  set_fact:
+    ubuntu_target: "{{ target in ['ubuntu_22_04', 'ubuntu_20_04', 'ubuntu_23_10'] }}"
+    crioVersion: "{{ utils.crio.version }}"
+
+
+- name: Prepare reusable variables
+  set_fact:
+    extra_settings_location: "/etc/crio/crio.conf.d/additional-settings"
+    os: "{{ utils.crio.os }}"
+    version: "{{ utils.crio.version }}"
+
+
+- name: Ensure clean-up for idempotent playbook
+  shell: |
+    rm -rf {{ item }}
+  loop:
+    - "/etc/apt/sources.list.d/devel:kubic:libcontainers:stable:cri-o:*.list"
+    - "/etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list"
+    - "/usr/share/keyrings/libcontainers-crio-archive-keyring.gpg"
+    - "/usr/share/keyrings/libcontainers-archive-keyring.gpg"
+  become: true
+
+- name: Prepare repos and keys for installation
+  shell: |
+    echo "deb [signed-by=/usr/share/keyrings/libcontainers-archive-keyring.gpg] https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/{{ os }}/ /" > /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
+    echo "deb [signed-by=/usr/share/keyrings/libcontainers-crio-archive-keyring.gpg] https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable:/cri-o:/{{ version }}/{{ os }}/ /" > /etc/apt/sources.list.d/devel:kubic:libcontainers:stable:cri-o:{{ version }}.list
+
+    mkdir -p /usr/share/keyrings
+    rm -rf /usr/share/keyrings/libcontainers-crio-archive-keyring.gpg /usr/share/keyrings/libcontainers-archive-keyring.gpg
+    curl -L https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/{{ os }}/Release.key | gpg --dearmor -o /usr/share/keyrings/libcontainers-archive-keyring.gpg
+    curl -L https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable:/cri-o:/{{ version }}/{{ os }}/Release.key | gpg --dearmor -o /usr/share/keyrings/libcontainers-crio-archive-keyring.gpg
+  become: true
+
+- name: Update APT and cache
+  apt:
+    update_cache: true
+  become: true
+
+- name: Prepare cri-o sysctl changes
+  shell: |
+    modprobe br_netfilter
+    modprobe overlay
+    tee /etc/modules-load.d/k8s.conf <<EOF
+    overlay
+    br_netfilter
+    EOF
+
+    tee /etc/sysctl.d/z_kubernetes.conf<<EOF
+      net.bridge.bridge-nf-call-ip6tables = 1
+      net.bridge.bridge-nf-call-iptables = 1
+      net.ipv4.ip_forward = 1
+      #net.ipv4.conf.*.rp_filter = 0
+      #net.ipv4.conf.all.rp_filter = 0
+      #net.ipv4.conf.default.rp_filter = 0
+    EOF
+    sysctl --system
+  become: true
+
+
+- name: Install CRI-O
+  apt:
+    name:
+      - cri-o
+      - cri-o-runc
+    state: present
+  become: true
+
+- name: Ensure file does not exists previously
+  ansible.builtin.file:
+    path: "{{ extra_settings_location }}"
+    state: absent
+  become: true
+
+# Creates empty file for main.tf
+- name: Create file "{{ extra_settings_location }}"
+  ansible.builtin.file:
+    path: "{{ extra_settings_location }}"
+    state: touch
+    mode: u+rw-x,g+w-x,o+r-wx
+    modification_time: preserve
+    access_time: preserve
+  become: true
+
+
+- name: Include cri-o-runc reference
+  ansible.builtin.blockinfile:
+    path: "{{ extra_settings_location }}"
+    block: |
+      [crio.runtime.runtimes.runc]
+      runtime_path = ""
+      runtime_type = "oci"
+      runtime_root = "/run/runc"
+    marker: "#REMOVE_ME"
+  become: true
