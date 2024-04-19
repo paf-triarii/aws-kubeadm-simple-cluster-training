@@ -3,7 +3,7 @@ cidr_block: "10.15.0.0/16"
 
 root:
   # Flag the decides if the terraform files are generated using the playbook
-  prepare: true
+  prepare: false
   # Decides if the terraform generated resources are going to be created.
   write: true
   terraform:
@@ -104,6 +104,20 @@ resources:
               start: 443
               end: 443
             destination: 0.0.0.0/0
+
+          - name: Allow DNS Queries
+            protocol: TCP
+            portRange:
+              start: 53
+              end: 53
+            destination: 0.0.0.0/0
+
+          - name: Allow DNS Queries UDP
+            protocol: UDP
+            portRange:
+              start: 53
+              end: 53
+            destination: 0.0.0.0/0
   key:
     algorithm: RSA
     bits: 4096
@@ -157,6 +171,12 @@ resources:
             # If nat gateway creation is enabled and target is "playbook", it will use the id of the current generated nat gateway id.
             # Otherwise an internet gateway id must be specified here (Check # IMPORTANT-IG-ID).
             target: playbook
+  dns_resolver:
+    enabled: true
+    options:
+      dns_servers:
+        - "10.15.1.35"
+        - "10.15.2.35"
   vpn:
     enabled: true
     domain: example.com

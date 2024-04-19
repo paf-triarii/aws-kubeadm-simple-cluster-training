@@ -168,9 +168,23 @@ docker run --user $(id -u):$(id -g) -v $(pwd)/provisioner:/app  -e AWS_ACCESS_KE
 cd $(find $(pwd) -type d -name infra-provision*)/bsa-auto-infra/modules/key
 ```
 
-2. Launch a connection with ssh using the private ip and the hostname of the target destination.
+> [!TIP]
+> If you have enabled the creation of client vpn, follow the next steps. **Make sure to select your region first!**
 
-![Client OpenVPN modification](docs/img/client-openvpn.png)
+3. Navigate to [Client VPNS](https://eu-west-2.console.aws.amazon.com/vpc/home?region=eu-west-2#ClientVPNEndpoints:)
+4. Click on **Download client configuration**
+
+![Client VPN download](docs/img/client-download-vpn.png)
+
+5. Insert the client certificates in the downloaded file. Check the illustration for the format.
+
+```bash
+terraform_outputs=$(find $(pwd) -type d -name infra-provision*)
+cat ${terraform_outputs}/bsa-auto-infra/modules/vpn/pki_certs/client.crt
+cat ${terraform_outputs}/bsa-auto-infra/modules/vpn/pki_certs/client.key
+```
+
+2. Launch a connection with ssh using the private ip and the hostname of the target destination.
 
 <!-- ROADMAP -->
 ## 📍 Roadmap

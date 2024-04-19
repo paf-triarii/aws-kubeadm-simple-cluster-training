@@ -7,6 +7,7 @@
       ansible.builtin.set_fact:
         terraform_outputs: "{{ root.outputs.location }}/{{ root.terraform.prefix }}"
         instance_name: "{{ root.terraform.prefix | normalize_string | concat_strings(resources.subnet.options.name) }}"
+        key_pair_name: "{{ root.terraform.prefix | normalize_string | concat_strings(resources.subnet.options.name) }}_key"
 
     - name: Prepare reusable fact
       ansible.builtin.set_fact:
@@ -43,19 +44,14 @@
         index_var: l_index
       register: terraform_output_list
 
+    - name: Initialize block content
+      ansible.builtin.set_fact:
+        block_content: ""
+
     - name: Set block content based on index
       ansible.builtin.set_fact:
-        block_content: >
-          {% if l_index == 0 %}
-          [masters]
-          {{ item }} ansible_host={{ item | extract_ip }} ansible_ssh_private_key_file={{ modules_location }}/key/{{ key_pair_name }}_{{ l_index }}.pem
-          {% elif l_index == 1 %}
-          [workers]
-          {{ item }} ansible_host={{ item | extract_ip }} ansible_ssh_private_key_file={{ modules_location }}/key/{{ key_pair_name }}_{{ l_index }}.pem
-          {% else %}
-          {{ item }} ansible_host={{ item | extract_ip }} ansible_ssh_private_key_file={{ modules_location }}/key/{{ key_pair_name }}_{{ l_index }}.pem
-          {% endif %}
-      loop: "{{ terraform_output_list }}"
+        block_content: "{{ block_content }}{% if l_index == 0 %}[masters]\n{% elif l_index == 1 %}[workers]\n{% endif %}{{ item.stdout }} ansible_host={{ item.stdout | extract_ip }} ansible_ssh_private_key_file={{ modules_location }}/key/{{ key_pair_name }}_{{ l_index }}.pem\n"
+      loop: "{{ terraform_output_list.results }}"
       loop_control:
         index_var: l_index
 
@@ -64,7 +60,7 @@
         path: "{{ modules_location }}/key/{{ key_pair_name }}_{{ l_index }}.pem"
         owner: "{{ ansible_user }}"
         mode: '0400'
-      loop: "{{ terraform_output_list }}"
+      loop: "{{ terraform_output_list.results }}"
       loop_control:
         index_var: l_index
       become: true
@@ -74,13 +70,24 @@
         path: "../conf/inventory.ini"
         state: absent
 
+    - name: Ensure absence of inventory.ini
+      ansible.builtin.file:
+        path: "../conf/inventory.ini"
+        state: touch
+
     - name: Prepare inventory.ini
       ansible.builtin.blockinfile:
         path: "../conf/inventory.ini"
         block: "{{ block_content }}"
         marker: "#REMOVE_ME"
 
+    - name: Clean "#REMOVE_ME" unwanted markers for previous Module block insertions
+      ansible.builtin.lineinfile:
+        path: "../conf/inventory.ini"
+        state: absent
+        regexp: '#REMOVE_ME'
+
     - name: Inform of success of execution
       ansible.builtin.file:
         path: "{{ terraform_outputs }}/success"
-        state: present
+        state: touch
