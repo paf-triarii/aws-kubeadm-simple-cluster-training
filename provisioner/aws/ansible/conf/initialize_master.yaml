@@ -62,54 +62,54 @@
   hosts: localhost
   vars_files: ../env_variables_aws.yaml
   tasks:
-  - name: Check if target variable is in accepted ones
-    ansible.builtin.set_fact:
-      ubuntu_target: "{{ target in ['ubuntu_22_04', 'ubuntu_20_04', 'ubuntu_23_10'] }}"
-      kube_version: "{{ utils.kubernetes.version }}"
-      kubeconfig: "--kubeconfig {{ terraform_outputs }}/kubeconfig"
+    - name: Check if target variable is in accepted ones
+      ansible.builtin.set_fact:
+        ubuntu_target: "{{ target in ['ubuntu_22_04', 'ubuntu_20_04', 'ubuntu_23_10'] }}"
+        kube_version: "{{ utils.kubernetes.version }}"
+        kubeconfig: "--kubeconfig {{ terraform_outputs }}/kubeconfig"
 
-  # Ref: https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/
+    # Ref: https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/
 
-  - name: Install Google Cloud public signing key
-    ansible.builtin.shell: |
-      mkdir -p -m 755 /etc/apt/keyrings
-      curl -fsSL https://pkgs.k8s.io/core:/stable:/v{{ kube_version.split('.')[0:2] | join('.') }}/deb/Release.key \
-      | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
-    become: true
-    when: ubuntu_target
+    - name: Install Google Cloud public signing key
+      ansible.builtin.shell: |
+        mkdir -p -m 755 /etc/apt/keyrings
+        curl -fsSL https://pkgs.k8s.io/core:/stable:/v{{ kube_version.split('.')[0:2] | join('.') }}/deb/Release.key \
+        | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+      become: true
+      when: ubuntu_target
 
-  - name: Add Kubernetes repository
-    ansible.builtin.shell: |
-      echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.29/deb/ /' \
-      | tee /etc/apt/sources.list.d/kubernetes.list
-    become: true
-    when: ubuntu_target
+    - name: Add Kubernetes repository
+      ansible.builtin.shell: |
+        echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.29/deb/ /' \
+        | tee /etc/apt/sources.list.d/kubernetes.list
+      become: true
+      when: ubuntu_target
 
-  - name: Update APT and cache
-    ansible.builtin.apt:
-      update_cache: true
-    become: true
-    when: ubuntu_target
+    - name: Update APT and cache
+      ansible.builtin.apt:
+        update_cache: true
+      become: true
+      when: ubuntu_target
 
-  - name: Install kubectl
-    ansible.builtin.apt:
-      name: "kubectl={{ kube_version }}"
-      state: present
-    become: true
-    when: ubuntu_target and utils.kubernetes.kubectl
-    register: kubectl_result
-    ignore_errors: true
+    - name: Install kubectl
+      ansible.builtin.apt:
+        name: "kubectl={{ kube_version }}"
+        state: present
+      become: true
+      when: ubuntu_target and utils.kubernetes.kubectl
+      register: kubectl_result
+      ignore_errors: true
 
-  - name: Install kubectl if specific version is not available
-    ansible.builtin.apt:
-      name: kubectl
-      state: present
-    become: true
-    when: ubuntu_target and utils.kubernetes.kubectl and kubectl_result.failed
+    - name: Install kubectl if specific version is not available
+      ansible.builtin.apt:
+        name: kubectl
+        state: present
+      become: true
+      when: ubuntu_target and utils.kubernetes.kubectl and kubectl_result.failed
 
-- name: Install Calico
-  shell: |
-    kubectl {{ kubeconfig }} create -f https://raw.githubusercontent.com/projectcalico/calico/{{ addOns.cni.calico.version }}/manifests/tigera-operator.yaml --server https://{{ ansible_hostname }}:6443
-    sleep 5
-    curl https://raw.githubusercontent.com/projectcalico/calico/{{ addOns.cni.calico.version }}/manifests/custom-resources.yaml | \
-    sed -e "s+192.168.0.0/16+{{ addOns.cni.calico.cidr }}+g" | kubectl {{ kubeconfig }} create -f - --server https://{{ ansible_hostname }}:6443
+    - name: Install Calico
+      ansible.builtin.shell: |
+        kubectl {{ kubeconfig }} create -f https://raw.githubusercontent.com/projectcalico/calico/{{ addOns.cni.calico.version }}/manifests/tigera-operator.yaml --server https://{{ ansible_hostname }}:6443
+        sleep 5
+        curl https://raw.githubusercontent.com/projectcalico/calico/{{ addOns.cni.calico.version }}/manifests/custom-resources.yaml | \
+        sed -e "s+192.168.0.0/16+{{ addOns.cni.calico.cidr }}+g" | kubectl {{ kubeconfig }} create -f - --server https://{{ ansible_hostname }}:6443

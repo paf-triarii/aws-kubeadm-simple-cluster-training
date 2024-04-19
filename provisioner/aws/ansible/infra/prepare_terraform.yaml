@@ -7,16 +7,6 @@
       ansible.builtin.set_fact:
         terraform_outputs: "{{ root.outputs.location }}/{{ root.terraform.prefix }}"
 
-    - name: Set environment variable
-      ansible.builtin.lineinfile:
-        path: "/etc/environment"
-        line: "TERRAFORM_OUTPUTS={{ terraform_outputs }}"
-        owner: "{{ ansible_user }}"
-        group: "{{ ansible_user }}"
-        mode: '0755'
-        create: true
-      become: true
-
     - name: Prepare reusable fact
       ansible.builtin.set_fact:
         modules_location: "{{ terraform_outputs }}/modules"

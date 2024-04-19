@@ -107,7 +107,7 @@ pip3 install boto3 botocore
 You just have to build the Docker image!
 
 ```bash
-docker build provisioner -f provisioner/Dockerfile -t windows-provider:1.0 \
+docker build provisioner -f provisioner/Dockerfile -t cluster-provider:1.0 \
 --build-arg UID=$(id -u) --build-arg GID=$(id -g) --build-arg USER=$(id -un) --build-arg GROUP=$(id -gn)
 ```
 
@@ -154,7 +154,7 @@ If you have built the image and adapted the [Ansible env variables as your desir
 
 ```bash
 docker run --user $(id -u):$(id -g) -v $(pwd)/provisioner:/app  -e AWS_ACCESS_KEY_ID="" -e AWS_SECRET_ACCESS_KEY="" \
--e AWS_REGION="eu-west-2"   -e VERBOSITY="-vvv" -e ANSIBLE_FILTER_PLUGINS=/app/filter_plugins windows-provider:1.0
+-e AWS_REGION="eu-west-2"   -e VERBOSITY="-vvv" -e ANSIBLE_FILTER_PLUGINS=/app/filter_plugins cluster-provider:1.0
 ```
 
 > [!IMPORTANT]

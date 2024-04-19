@@ -1,3 +1,6 @@
+# Reusable variables here to avoid recursions issues
+cidr_block: "10.15.0.0/16"
+
 root:
   # Flag the decides if the terraform files are generated using the playbook
   prepare: true
@@ -8,7 +11,7 @@ root:
     aws_version: 4.0
     prefix: bsa-auto-infra
     modules:
-      vpc: "{{ root.terraform.location }}/modules/vpc"
+      vpc: "../terraform_templates/modules/vpc"
   outputs:
     location: /app/infra-provision-outputs
 
@@ -25,7 +28,7 @@ resources:
     # This is only required when the resource is going to be created
     options:
       name: "vpc"
-      cidr_block: "{{ resources.vpc.options.cidr_block }}"
+      cidr_block: "{{ cidr_block }}"
       instance_tenancy: "default"
       enable_dns_support: "true"
       enable_dns_hostnames: "false"
@@ -38,8 +41,8 @@ resources:
     options:
       name: "sbt"
       cidr_block:
-        public: 10.15.0.0/24
-        private: 10.16.0.0/24
+        public: 10.15.1.0/24
+        private: 10.15.2.0/24
       availability_zone: ""
   security_group:
     enabled: true
@@ -59,7 +62,7 @@ resources:
               start: 0
               end: 65535
             # IMPORTANT: To enable this rule, ensure that matches the resources.vpc.options.cidr_block
-            source: "{{ resources.vpc.options.cidr_block }}"
+            source: "{{ cidr_block }}"
 
           - name: Allow SSH Traffic for my target IP
             protocol: TCP
@@ -79,7 +82,7 @@ resources:
               end: 65535
             # IMPORTANT: To enable this rule, ensure that matches the resources.vpc.options.cidr_block
             # TODO: Create automation so it "Self VPC" inputs the VPC id either pre-existing or generated instead of having to have the exact value.
-            destination: "{{ resources.vpc.options.cidr_block }}"
+            destination: "{{ cidr_block }}"
 
           - name: Allow Common internet 80
             protocol: TCP

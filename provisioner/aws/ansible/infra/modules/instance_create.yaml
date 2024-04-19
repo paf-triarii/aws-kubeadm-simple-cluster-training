@@ -11,14 +11,21 @@
     - name: Create Module folder
       ansible.builtin.shell: |
         if [ ! -d "{{ module_outputs }}" ]; then
-          mkdir -p "{{ module_outputs }}"
+          mkdir -p "{{ module_outputs }}_{{ l_index }}"
         else
           echo "Outputs Folder in location {{ module_outputs }} already exists. Skipping."
         fi
+      loop: "{{ range(0, resources.instance.count | int) }}"
+      loop_control:
+        index_var: l_index
 
-    - name: Create required main.tf, outputs.tf and variables.tf
-      ansible.builtin.shell: touch {{ module_outputs }}/{{ item }}
-      loop: ["main.tf", "variables.tf", "outputs.tf"]
+    - name: Set instance count
+      ansible.builtin.set_fact:
+        instance_count: "{{ range(0, resources.instance.count | int) }}"
+
+    - name: Create required main.tf, outputs.tf and variables.tf for each instance
+      ansible.builtin.shell: touch {{ module_outputs }}_{{ item[1] }}/{{ item[0] }}
+      loop: "{{ ['main.tf', 'variables.tf', 'outputs.tf'] | product(instance_count) | list }}"
 
     ###############################
     # PREPARING MODULE MAIN FILES #
@@ -27,7 +34,7 @@
     # variables.tf
     - name: Prepare module variables.tf content file
       ansible.builtin.blockinfile:
-        path: "{{ module_outputs }}/variables.tf"
+        path: "{{ module_outputs }}_{{ l_index }}/variables.tf"
         block: |
           variable "tags" {
             type = map(string)
@@ -63,13 +70,21 @@
             type = string
             description = "Key name for the instance."
           }
+
+          variable "aws_role_name" {
+            type = string
+            description = "Name of the instance role"
+          }
         marker: "#REMOVE_ME"
+      loop: "{{ range(0, resources.instance.count | int) }}"
+      loop_control:
+        index_var: l_index
 
 
     # main.tf
     - name: Prepare module main.tf content file
       ansible.builtin.blockinfile:
-        path: "{{ module_outputs }}/main.tf"
+        path: "{{ module_outputs }}_{{ l_index }}/main.tf"
         block: |
           resource "aws_instance" "{{ instance_name }}_{{ l_index }}" {
             subnet_id     = var.subnet_id
@@ -101,7 +116,7 @@
     # outputs.tf
     - name: Prepare module outputs.tf content file
       ansible.builtin.blockinfile:
-        path: "{{ module_outputs }}/outputs.tf"
+        path: "{{ module_outputs }}_{{ l_index }}/outputs.tf"
         block: |
           output "{{ instance_name }}_{{ l_index }}_private_dns" {
             description = "Private DNS of the instance"
@@ -127,8 +142,8 @@
       ansible.builtin.blockinfile:
         path: "{{ terraform_outputs }}/main.tf"
         block: |
-          module "aws_instance" {
-            source = "./modules/instance"
+          module "aws_instance_{{ l_index }}" {
+            source = "./modules/instance_{{ l_index }}"
             subnet_id = {{ 'module.aws_subnet.subnet_id_private' if resources.subnet.enabled else 'var.subnet_id' | replace("'", "") }}
             instance_name = "{{ instance_name }}_{{ l_index }}"
             instance_type = var.instance_type
@@ -165,12 +180,12 @@
         block: |
           output "{{ instance_name }}_{{ l_index }}_private_dns" {
             description = "The private DNS of the instance"
-            value = module.aws_instance.{{ instance_name }}_{{ l_index }}_private_dns
+            value = module.aws_instance_{{ l_index }}.{{ instance_name }}_{{ l_index }}_private_dns
           }
 
           output "{{ instance_name }}_{{ l_index }}_arn" {
             description = "The ARN associated to the instance"
-            value = module.aws_instance.{{ instance_name }}_{{ l_index }}_arn
+            value = module.aws_instance_{{ l_index }}.{{ instance_name }}_{{ l_index }}_arn
           }
 
         marker: "#REMOVE_ME"
@@ -196,10 +211,10 @@
 
     - name: Clean "#REMOVE_ME" unwanted markers for previous Module block insertions
       ansible.builtin.lineinfile:
-        path: "{{ module_outputs }}/{{ item }}"
+        path: "{{ module_outputs }}_{{ item[1] }}/{{ item[0] }}"
         state: absent
         regexp: '#REMOVE_ME'
-      loop: ["variables.tf", "main.tf", "outputs.tf"]
+      loop: "{{ ['main.tf', 'variables.tf', 'outputs.tf'] | product(instance_count) | list }}"
 
 
     - name: Clean "#REMOVE_ME" unwanted markers for previous Root block insertions

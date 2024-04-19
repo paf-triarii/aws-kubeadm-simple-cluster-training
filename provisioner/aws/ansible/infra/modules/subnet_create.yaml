@@ -72,7 +72,7 @@
             map_public_ip_on_launch = true
 
             tags = merge(var.tags,
-              { Name = var.subnet_name })
+              { Name = var.subnet_name_public })
           }
 
           resource "aws_subnet" "{{ subnet_name }}_private" {
@@ -80,7 +80,7 @@
             cidr_block = var.subnet_cidr_block_private
 
             tags = merge(var.tags,
-              { Name = var.subnet_name })
+              { Name = var.subnet_name_private })
           }
         marker: "#REMOVE_ME"
 
@@ -152,8 +152,8 @@
         block: |
           subnet_name_public = "{{ subnet_name }}_public"
           subnet_cidr_block_public = "{{ resources.subnet.options.cidr_block.public }}"
-          subnet_name_public = "{{ subnet_name }}_private"
-          subnet_cidr_block_public = "{{ resources.subnet.options.cidr_block.private }}"
+          subnet_name_private = "{{ subnet_name }}_private"
+          subnet_cidr_block_private = "{{ resources.subnet.options.cidr_block.private }}"
         marker: "#REMOVE_ME"
 
 

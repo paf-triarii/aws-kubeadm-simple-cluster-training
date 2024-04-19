@@ -52,7 +52,8 @@
         path: "{{ module_outputs }}/main.tf"
         block: |
           resource "aws_eip" "nat_gateway_eip" {
-            domain = vpc
+            tags = merge(var.tags,
+              { Name = var.nat_gateway_name })
           }
 
           resource "aws_nat_gateway" "{{ nat_gateway_name }}" {
@@ -87,7 +88,7 @@
         block: |
           module "aws_nat_gateway" {
             source = "./modules/nat_gateway"
-            subnet_id = module.aws_subnet.subnet_id_private
+            subnet_id = module.aws_subnet.subnet_id_public
             nat_gateway_name  = var.nat_gateway_name
             tags = var.tags
           }

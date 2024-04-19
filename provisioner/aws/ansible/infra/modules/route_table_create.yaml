@@ -97,7 +97,7 @@
           }
 
           resource "aws_route_table_association" "{{ route_table_name }}_public_as" {
-            subnet_id      = var.subnet_id
+            subnet_id      = var.subnet_id_public
             route_table_id = aws_route_table.{{ route_table_name }}_public.id
           }
 
@@ -109,7 +109,7 @@
           }
 
           resource "aws_route_table_association" "{{ route_table_name }}_private_as" {
-            subnet_id      = var.subnet_id
+            subnet_id      = var.subnet_id_private
             route_table_id = aws_route_table.{{ route_table_name }}_private.id
           }
         marker: "#REMOVE_ME"
@@ -156,13 +156,14 @@
           module "aws_route_table_public" {
             source = "./modules/route_table"
             vpc_id = {{ 'module.aws_vpc.vpc_id' if resources.vpc.enabled else 'var.vpc_id' | replace("'", "") }}
-            subnet_id = {{ 'module.aws_subnet.subnet_id' if resources.subnet.enabled else 'var.subnet_id' | replace("'", "") }}
+            subnet_id_public = {{ 'module.aws_subnet.subnet_id_public' if resources.subnet.enabled else 'var.subnet_id' | replace("'", "") }}
+            subnet_id_private = module.aws_subnet.subnet_id_private
             route_table_name  = var.route_table_name
             {% if resources.route_table.options.public.routes | selectattr("target", "equalto", "playbook") | list | length > 0 %}
-            target_id = module.aws_internet_gateway.internet_gateway_id
+            target_id_public = module.aws_internet_gateway.internet_gateway_id
             {% endif %}
             {% if resources.route_table.options.private.routes | selectattr("target", "equalto", "playbook") | list | length > 0 %}
-            target_id = module.aws_nat_gateway.nat_gateway_id
+            target_id_private = module.aws_nat_gateway.nat_gateway_id
             {% endif %}
             tags = var.tags
           }

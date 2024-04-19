@@ -62,5 +62,7 @@ RUN chmod +x /entrypoint.sh
 USER ${UID}:${GID}
 
 ENV ANSIBLE_HOST_KEY_CHECKING=False
+ENV ANSIBLE_USER_LOCAL="perico"
+ENV ANSIBLE_USER_REMOTE="ubuntu"
 
 ENTRYPOINT ["/entrypoint.sh"]

@@ -222,7 +222,7 @@
       ansible.builtin.blockinfile:
         path: "{{ terraform_outputs }}/main.tf"
         block: |
-          module "aws_iam_role" {
+          module "aws_iam_instance_profile" {
             source = "./modules/roles"
             aws_role_name = var.aws_role_name
             tags = var.tags
