@@ -103,19 +103,14 @@
       ansible.builtin.blockinfile:
         path: "{{ module_outputs }}/outputs.tf"
         block: |
-          output "{{ instance_name }}_{{ l_index }}_public_ip" {
-            description = "The public IP associated to the instance"
-            value = aws_instance.{{ instance_name }}_{{ l_index }}.public_ip
+          output "{{ instance_name }}_{{ l_index }}_private_dns" {
+            description = "Private DNS of the instance"
+            value = aws_instance.{{ instance_name }}_{{ l_index }}.private_dns
           }
 
           output "{{ instance_name }}_{{ l_index }}_arn" {
             description = "The ARN associated to the instance"
             value = aws_instance.{{ instance_name }}_{{ l_index }}.arn
-          }
-
-          output "{{ instance_name }}_{{ l_index }}_password_data" {
-            description = "The windows administrator password Base64 encoded"
-            value = aws_instance.{{ instance_name }}_{{ l_index }}.password_data
           }
         marker: "#REMOVE_ME"
       loop: "{{ range(0, resources.instance.count | int) }}"
@@ -134,7 +129,7 @@
         block: |
           module "aws_instance" {
             source = "./modules/instance"
-            subnet_id = {{ 'module.aws_subnet.subnet_id' if resources.subnet.enabled else 'var.subnet_id' | replace("'", "") }}
+            subnet_id = {{ 'module.aws_subnet.subnet_id_private' if resources.subnet.enabled else 'var.subnet_id' | replace("'", "") }}
             instance_name = "{{ instance_name }}_{{ l_index }}"
             instance_type = var.instance_type
             instance_ami = var.instance_ami
@@ -167,9 +162,9 @@
       ansible.builtin.blockinfile:
         path: "{{ terraform_outputs }}/outputs.tf"
         block: |
-          output "{{ instance_name }}_{{ l_index }}_public_ip" {
-            description = "The public IP associated to the instance"
-            value = module.aws_instance.{{ instance_name }}_{{ l_index }}_public_ip
+          output "{{ instance_name }}_{{ l_index }}_private_dns" {
+            description = "The private DNS of the instance"
+            value = module.aws_instance.{{ instance_name }}_{{ l_index }}_private_dns
           }
 
           output "{{ instance_name }}_{{ l_index }}_arn" {
@@ -177,10 +172,6 @@
             value = module.aws_instance.{{ instance_name }}_{{ l_index }}_arn
           }
 
-          output "{{ instance_name }}_{{ l_index }}_password_data" {
-            description = "The windows administrator password Base64 encoded"
-            value = module.aws_instance.{{ instance_name }}_{{ l_index }}_password_data
-          }
         marker: "#REMOVE_ME"
       loop: "{{ range(0, resources.instance.count | int) }}"
       loop_control:
