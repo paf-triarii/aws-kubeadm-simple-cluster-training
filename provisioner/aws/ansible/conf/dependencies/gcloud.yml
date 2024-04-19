@@ -1,0 +1,26 @@
+- name: Check if target variable is in accepted ones
+  set_fact:
+    ubuntu_target: "{{ target in ['ubuntu_22_04', 'ubuntu_20_04'] }}"
+
+- name: Get google key
+  shell: |
+    rm -f /usr/share/keyrings/cloud.google.gpg
+    curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | \
+    gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg
+  become: true
+  when: ubuntu_target
+
+- name: Unzip download
+  shell: |
+    echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" \
+    | tee /etc/apt/sources.list.d/google-cloud-sdk.list
+  become: true
+  when: ubuntu_target
+
+- name: Install Google CLI
+  apt:
+    update_cache: true
+    name: google-cloud-cli
+    state: present
+  become: true
+  when: ubuntu_target

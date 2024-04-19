@@ -1,0 +1,25 @@
+- name: Check if target variable is in accepted ones
+  set_fact:
+    ubuntu_target: "{{ target in ['ubuntu_22_04', 'ubuntu_20_04'] }}"
+
+- name: Update APT and cache
+  apt:
+    update_cache: true
+  become: true
+  when: ubuntu_target
+
+- name: Install core common dependencies for all
+  apt:
+    name:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - gnupg-agent
+      - gnupg
+      - software-properties-common
+      - unzip
+      - bash-completion
+      - gh
+    state: present
+  become: true
+  when: ubuntu_target

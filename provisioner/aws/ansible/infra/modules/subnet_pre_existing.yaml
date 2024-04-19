@@ -1,6 +1,6 @@
 - name: Mock
   hosts: localhost
-  vars_files: ../env_variables_aws.yaml
+  vars_files: ../../env_variables_aws.yaml
   tasks:
     - name: Test
       shell: echo Test

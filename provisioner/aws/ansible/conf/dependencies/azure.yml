@@ -1,0 +1,9 @@
+- name: Check if target variable is in accepted ones
+  set_fact:
+    ubuntu_target: "{{ target in ['ubuntu_22_04', 'ubuntu_20_04'] }}"
+
+- name: Install Azure CLI
+  shell: |
+    curl -sL https://aka.ms/InstallAzureCLIDeb | bash
+  become: true
+  when: ubuntu_target

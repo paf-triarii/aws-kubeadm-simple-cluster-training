@@ -1,12 +1,12 @@
-- name: Subnet Generation Preparation
+- name: Security Group Generation Preparation
   hosts: localhost
-  vars_files: ../env_variables_aws.yaml
+  vars_files: ../../env_variables_aws.yaml
 
   tasks:
     - name: Simplify reusable variables
       ansible.builtin.set_fact:
-        subnet_name: "{{ root.terraform.prefix | normalize_string | concat_strings(resources.subnet.options.name) }}"
-        module_outputs: "{{ modules_location }}/subnet"
+        security_group_name: "{{ root.terraform.prefix | normalize_string | concat_strings(resources.security_group.options.name) }}"
+        module_outputs: "{{ modules_location }}/security_group"
 
     - name: Create Module folder
       shell: |
@@ -34,24 +34,14 @@
             description = "General Tags that will be applied to all the resources generated"
           }
 
-          variable "subnet_name_public" {
+          variable "security_group_name" {
             type = string
-            description = "Name tag for the subnet resource"
+            description = "Name tag for the security_group resource"
           }
 
-          variable "subnet_cidr_block_public" {
+          variable "security_group_description" {
             type = string
-            description = "CIDR Block of subnet. E.g. 10.0.0.0/24"
-          }
-
-          variable "subnet_name_private" {
-            type = string
-            description = "Name tag for the subnet resource"
-          }
-
-          variable "subnet_cidr_block_private" {
-            type = string
-            description = "CIDR Block of subnet. E.g. 10.0.0.0/24"
+            description = "Main description of the purpose of the security group"
           }
 
           variable "vpc_id" {
@@ -66,21 +56,13 @@
       ansible.builtin.blockinfile:
         path: "{{ module_outputs }}/main.tf"
         block: |
-          resource "aws_subnet" "{{ subnet_name }}_public" {
+          resource "aws_security_group" "{{ security_group_name }}" {
+            name        = var.security_group_name
             vpc_id     = var.vpc_id
-            cidr_block = var.subnet_cidr_block_public
-            map_public_ip_on_launch = true
-
+            description = var.security_group_description
+            
             tags = merge(var.tags,
-              { Name = var.subnet_name })
-          }
-
-          resource "aws_subnet" "{{ subnet_name }}_private" {
-            vpc_id     = var.vpc_id
-            cidr_block = var.subnet_cidr_block_private
-
-            tags = merge(var.tags,
-              { Name = var.subnet_name })
+              { Name = var.security_group_name })
           }
         marker: "#REMOVE_ME"
 
@@ -90,13 +72,9 @@
       ansible.builtin.blockinfile:
         path: "{{ module_outputs }}/outputs.tf"
         block: |
-          output "subnet_id_public" {
-            description = "The created subnet id"
-            value = aws_subnet.{{ subnet_name }}_public.id
-          }
-          output "subnet_id_private" {
-            description = "The created subnet id"
-            value = aws_subnet.{{ subnet_name }}_private.id
+          output "security_group_id" {
+            description = "The created security_group id"
+            value = aws_security_group.{{ security_group_name }}.id
           }
         marker: "#REMOVE_ME"
 
@@ -105,17 +83,17 @@
     # MODIFYING ROOT MAIN FILES #
     #############################
 
+    # Option 1: Pre-Existing VPC so it is taken from variable
+    # Option 2: VPC created by playbook, so it is an output from aws_vpc module
     - name: Prepare root main.tf content file
       ansible.builtin.blockinfile:
         path: "{{ terraform_outputs }}/main.tf"
         block: |
-          module "aws_subnet" {
-            source = "./modules/subnet"
-            vpc_id = module.aws_vpc.vpc_id
-            subnet_name_public     = var.subnet_name_public
-            subnet_cidr_block_public = var.subnet_cidr_block_public
-            subnet_name_private     = var.subnet_name_private
-            subnet_cidr_block_private = var.subnet_cidr_block_private
+          module "aws_security_group" {
+            source = "./modules/security_group"
+            vpc_id = {{ 'module.aws_vpc.vpc_id' if resources.vpc.enabled else 'var.vpc_id' | replace("'","")  }}
+            security_group_name     = var.security_group_name
+            security_group_description = var.security_group_description
             tags = var.tags
           }
         marker: "#REMOVE_ME"
@@ -124,36 +102,36 @@
       ansible.builtin.blockinfile:
         path: "{{ terraform_outputs }}/variables.tf"
         block: |
-          variable "subnet_name_public" {
+          variable "security_group_name" {
             type = string
-            description = "Name tag for the subnet resource"
+            description = "Name tag for the security_group resource"
           }
 
-          variable "subnet_cidr_block_public" {
+          variable "security_group_description" {
             type = string
-            description = "CIDR Block of subnet. E.g. 10.0.0.0/24"
-          }
-
-          variable "subnet_name_private" {
-            type = string
-            description = "Name tag for the subnet resource"
-          }
-
-          variable "subnet_cidr_block_private" {
-            type = string
-            description = "CIDR Block of subnet. E.g. 10.0.0.0/24"
+            description = "Main description of the purpose of the security group"
           }
         marker: "#REMOVE_ME"
+
+    # Option 1: Pre-Existing VPC input variable
+    - name: Prepare root variables.tf content file if vpc create
+      ansible.builtin.blockinfile:
+        path: "{{ terraform_outputs }}/variables.tf"
+        block: |
+          variable "vpc_id" {
+            type = string
+            description = "ID of the parent VPC"
+          }
+        marker: "#REMOVE_ME"
+      when: not resources.vpc.enabled
 
 
     - name: Prepare root envVariables (real values) content file
       ansible.builtin.blockinfile:
         path: "{{ terraform_outputs }}/envVariables"
         block: |
-          subnet_name_public = "{{ subnet_name }}_public"
-          subnet_cidr_block_public = "{{ resources.subnet.options.cidr_block.public }}"
-          subnet_name_public = "{{ subnet_name }}_private"
-          subnet_cidr_block_public = "{{ resources.subnet.options.cidr_block.private }}"
+          security_group_name = "{{ security_group_name }}"
+          security_group_description = "{{ resources.security_group.options.description }}"
         marker: "#REMOVE_ME"
 
 

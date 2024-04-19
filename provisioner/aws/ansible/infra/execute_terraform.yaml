@@ -1,0 +1,81 @@
+---
+- name: Prepare Outputs
+  hosts: localhost
+  vars_files: ../env_variables_aws.yaml
+  tasks:
+    - name: Prepare reusable fact
+      ansible.builtin.set_fact:
+        terraform_outputs: "{{ root.outputs.location }}/{{ root.terraform.prefix }}"
+        instance_name: "{{ root.terraform.prefix | normalize_string | concat_strings(resources.subnet.options.name) }}"
+
+    - name: Prepare reusable fact
+      ansible.builtin.set_fact:
+        modules_location: "{{ terraform_outputs }}/modules"
+
+    - name: Terraform init
+      ansible.builtin.shell: |
+        terraform init
+      args:
+        chdir: "{{ terraform_outputs }}"
+      when: root.prepare
+
+    - name: Terraform plan
+      ansible.builtin.shell: |
+        terraform plan -var-file=envVariables --out tfplan
+      args:
+        chdir: "{{ terraform_outputs }}"
+      when: root.prepare
+
+    - name: Terraform apply
+      ansible.builtin.shell: |
+        terraform apply tfplan
+      args:
+        chdir: "{{ terraform_outputs }}"
+      when: root.prepare
+
+    - name: Get terraform output
+      ansible.builtin.shell: |
+        terraform output -raw {{ instance_name }}_{{ l_index }}_private_dns
+      args:
+        chdir: "{{ terraform_outputs }}"
+      loop: "{{ range(0, resources.instance.count | int) }}"
+      loop_control:
+        index_var: l_index
+      register: terraform_output_list
+
+    - name: Set block content based on index
+      ansible.builtin.set_fact:
+        block_content: >
+          {% if l_index == 0 %}
+          [masters]
+          {{ item }} ansible_host={{ item | extract_ip }} ansible_ssh_private_key_file={{ modules_location }}/key/{{ key_pair_name }}_{{ l_index }}.pem
+          {% elif l_index == 1 %}
+          [workers]
+          {{ item }} ansible_host={{ item | extract_ip }} ansible_ssh_private_key_file={{ modules_location }}/key/{{ key_pair_name }}_{{ l_index }}.pem
+          {% else %}
+          {{ item }} ansible_host={{ item | extract_ip }} ansible_ssh_private_key_file={{ modules_location }}/key/{{ key_pair_name }}_{{ l_index }}.pem
+          {% endif %}
+      loop: "{{ terraform_output_list }}"
+      loop_control:
+        index_var: l_index
+
+    - name: Change ownership and permissions of the keys
+      ansible.builtin.file:
+        path: "{{ modules_location }}/key/{{ key_pair_name }}_{{ l_index }}.pem"
+        owner: "{{ ansible_user }}"
+        mode: '0400'
+      loop: "{{ terraform_output_list }}"
+      loop_control:
+        index_var: l_index
+      become: true
+
+    - name: Ensure absence of inventory.ini
+      ansible.builtin.file:
+        path: "../conf/inventory.ini"
+        state: absent
+
+    - name: Prepare inventory.ini
+      ansible.builtin.blockinfile:
+        path: "../conf/inventory.ini"
+        block: "{{ block_content }}"
+        marker: "#REMOVE_ME"

@@ -61,4 +61,6 @@ RUN chmod +x /entrypoint.sh
 
 USER ${UID}:${GID}
 
+ENV ANSIBLE_HOST_KEY_CHECKING=False
+
 ENTRYPOINT ["/entrypoint.sh"]

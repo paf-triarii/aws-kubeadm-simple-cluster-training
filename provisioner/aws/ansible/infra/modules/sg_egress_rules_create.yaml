@@ -1,6 +1,6 @@
 - name: Security Group Egress Rules Generation Preparation
   hosts: localhost
-  vars_files: ../env_variables_aws.yaml
+  vars_files: ../../env_variables_aws.yaml
 
   tasks:
     - name: Simplify reusable variables

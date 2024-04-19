@@ -1,0 +1,12 @@
+- name: Check if target variable is in accepted ones
+  set_fact:
+    ubuntu_target: "{{ target in ['ubuntu_22_04', 'ubuntu_20_04', 'ubuntu_23_10'] }}"
+
+# Ref: https://helm.sh/docs/intro/install/
+- name: Install Helm
+  shell: |
+    curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+    chmod 700 get_helm.sh
+    ./get_helm.sh
+    rm -rf get_helm.sh
+  when: ubuntu_target

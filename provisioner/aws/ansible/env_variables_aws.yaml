@@ -8,7 +8,7 @@ root:
     aws_version: 4.0
     prefix: bsa-auto-infra
     modules:
-      vpc: ../terraform_templates/modules/vpc
+      vpc: "{{ root.terraform.location }}/modules/vpc"
   outputs:
     location: /app/infra-provision-outputs
 
@@ -134,16 +134,53 @@ resources:
     enabled: true
     options:
       name: "rt"
-      routes:
-        # For any additional routes, it only needs to be set as another element of the list with the details of name, type, destination and target.
-        - name: to internet gateway
-          type: gateway_id
-          destination: 0.0.0.0/0
-          # If internet gateway creation is enabled and target is "playbook", it will use the id of the current generated internet gateway id.
-          # Otherwise an internet gateway id must be specified here (Check # IMPORTANT-IG-ID).
-          target: playbook
+      public:
+        routes:
+          # For any additional routes, it only needs to be set as another element of the list with the details of name, type, destination and target.
+          - name: to internet gateway
+            type: gateway_id
+            destination: 0.0.0.0/0
+            # If internet gateway creation is enabled and target is "playbook", it will use the id of the current generated internet gateway id.
+            # Otherwise an internet gateway id must be specified here (Check # IMPORTANT-IG-ID).
+            target: playbook
+      private:
+        routes:
+          # For any additional routes, it only needs to be set as another element of the list with the details of name, type, destination and target.
+          - name: to nat gateway
+            type: gateway_id
+            destination: 0.0.0.0/0
+            # If nat gateway creation is enabled and target is "playbook", it will use the id of the current generated nat gateway id.
+            # Otherwise an internet gateway id must be specified here (Check # IMPORTANT-IG-ID).
+            target: playbook
   vpn:
     enabled: true
     domain: example.com
     organization: Example
     cidr: 10.0.0.0/16
+
+
+# Instances utils configuration
+target: ubuntu_22_04
+utils:
+  python:
+    enabled: true
+    version: "3.12"
+  aws:
+    enabled: true
+  azure:
+    enabled: false
+  gcloud:
+    enabled: false
+  docker:
+    enabled: true
+    version: "20.10.11"
+  kubernetes:
+    version: "1.29.0"
+    enabled: true
+    kubectl: true
+    kubeadm: true
+    kubelet: true
+  jq_yq:
+    enabled: true
+  helm:
+    enabled: true

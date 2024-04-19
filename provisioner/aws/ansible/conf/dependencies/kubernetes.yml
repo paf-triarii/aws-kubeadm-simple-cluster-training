@@ -1,0 +1,106 @@
+- name: Check if target variable is in accepted ones
+  set_fact:
+    ubuntu_target: "{{ target in ['ubuntu_22_04', 'ubuntu_20_04', 'ubuntu_23_10'] }}"
+    kube_version: "{{ utils.kubernetes.version }}"
+
+# Ref: https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/
+
+- name: Install Google Cloud public signing key
+  shell: |
+    mkdir -p -m 755 /etc/apt/keyrings
+    curl -fsSL https://pkgs.k8s.io/core:/stable:/v{{ kube_version.split('.')[0:2] | join('.') }}/deb/Release.key \
+    | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+  become: true
+  when: ubuntu_target
+
+- name: Add Kubernetes repository
+  shell: |
+    echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.29/deb/ /' \
+    | tee /etc/apt/sources.list.d/kubernetes.list
+  become: true
+  when: ubuntu_target
+
+- name: Update APT and cache
+  apt:
+    update_cache: true
+  become: true
+  when: ubuntu_target
+
+- name: Install kubeadm
+  apt:
+    name: "kubeadm={{ kube_version }}"
+    state: present
+  become: true
+  when: ubuntu_target and utils.kubernetes.kubeadm
+  register: kubeadm_result
+  ignore_errors: true
+
+- name: Install kubeadm if specific version is not available
+  apt:
+    name: kubeadm
+    state: present
+  become: true
+  when: ubuntu_target and utils.kubernetes.kubeadm and kubeadm_result.failed
+
+- name: Install kubelet
+  apt:
+    name: "kubelet={{ kube_version }}"
+    state: present
+  become: true
+  when: ubuntu_target and utils.kubernetes.kubelet
+  register: kubelet_result
+  ignore_errors: true
+
+- name: Install kubelet if specific version is not available
+  apt:
+    name: kubelet
+    state: present
+  become: true
+  when: ubuntu_target and utils.kubernetes.kubelet and kubelet_result.failed
+
+- name: Install kubectl
+  apt:
+    name: "kubectl={{ kube_version }}"
+    state: present
+  become: true
+  when: ubuntu_target and utils.kubernetes.kubectl
+  register: kubectl_result
+  ignore_errors: true
+
+- name: Install kubectl if specific version is not available
+  apt:
+    name: kubectl
+    state: present
+  become: true
+  when: ubuntu_target and utils.kubernetes.kubectl and kubectl_result.failed
+
+- name: Configure Kubectl Autocompletion
+  shell: |
+    kubectl completion bash >/etc/bash_completion.d/kubectl
+  become: true
+  when: ubuntu_target and utils.kubernetes.kubectl
+
+- name: Download and extract kubecolor
+  unarchive:
+    src: "https://github.com/hidetatz/kubecolor/releases/download/v0.0.25/kubecolor_0.0.25_Linux_x86_64.tar.gz"
+    dest: "/usr/local/bin"
+    remote_src: true
+    mode: "0555"
+    creates: "/usr/local/bin/kubecolor"
+  become: true
+  when: ubuntu_target and utils.kubernetes.kubectl
+
+- name: Add alias for kubecolor in .bashrc
+  lineinfile:
+    path: "/home/{{ ansible_user }}/.bashrc"
+    line: 'alias kubectl="kubecolor"'
+    create: true
+  when: ubuntu_target and utils.kubernetes.kubectl
+
+- name: Add alias for kubecolor in .bashrc root
+  lineinfile:
+    path: "/root/.bashrc"
+    line: 'alias kubectl="kubecolor"'
+    create: true
+  become: true
+  when: ubuntu_target and utils.kubernetes.kubectl

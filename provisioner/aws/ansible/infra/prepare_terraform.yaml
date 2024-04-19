@@ -1,11 +1,21 @@
 ---
 - name: Prepare Outputs
   hosts: localhost
-  vars_files: env_variables_aws.yaml
+  vars_files: ../env_variables_aws.yaml
   tasks:
     - name: Prepare reusable fact
       ansible.builtin.set_fact:
-        terraform_outputs: "{{ root.outputs.location | append_datetime }}/{{ root.terraform.prefix }}"
+        terraform_outputs: "{{ root.outputs.location }}/{{ root.terraform.prefix }}"
+
+    - name: Set environment variable
+      ansible.builtin.lineinfile:
+        path: "/etc/environment"
+        line: "TERRAFORM_OUTPUTS={{ terraform_outputs }}"
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        mode: '0755'
+        create: true
+      become: true
 
     - name: Prepare reusable fact
       ansible.builtin.set_fact:
@@ -13,14 +23,27 @@
 
     # TODO: Change to custom role reusable tasks that we want to do in the same way always.
     # TODO: Handle skipping scenario fully. What happens if skipping, aborts, user confirmation? Think in this feature.
+    - name: Remove output folders
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "{{ terraform_outputs }}"
+        - "{{ modules_location }}"
+      ignore_errors: true
+      become: true
+
     - name: Create output folders
-      ansible.builtin.shell: |
-        if [ ! -d "{{ terraform_outputs }}" ]; then
-          mkdir -p "{{ terraform_outputs }}"
-          mkdir -p "{{ modules_location }}"
-        else 
-          echo "Outputs Folder in location {{ terraform_outputs }} already exists. Skipping."
-        fi
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        mode: '0755'
+      loop:
+        - "{{ terraform_outputs }}"
+        - "{{ modules_location }}"
+      become: true
 
     - name: Prepare main output files
       ansible.builtin.shell: |

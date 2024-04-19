@@ -1,12 +1,12 @@
-- name: VPC Generation Preparation
+- name: Subnet Internet gateway Preparation
   hosts: localhost
-  vars_files: ../env_variables_aws.yaml
+  vars_files: ../../env_variables_aws.yaml
 
   tasks:
     - name: Simplify reusable variables
       ansible.builtin.set_fact:
-        vpc_name: "{{ root.terraform.prefix | normalize_string | concat_strings(resources.vpc.options.name) }}"
-        module_outputs: "{{ modules_location }}/vpc"
+        nat_gateway_name: "{{ root.terraform.prefix | normalize_string | concat_strings(resources.nat_gateway.options.name) }}"
+        module_outputs: "{{ modules_location }}/nat_gateway"
 
     - name: Create Module folder
       shell: |
@@ -18,7 +18,7 @@
 
     - name: Create required main.tf, outputs.tf and variables.tf
       shell: touch {{ module_outputs }}/{{ item }}
-      loop: ["main.tf","variables.tf","outputs.tf"]
+      loop: ["main.tf", "variables.tf", "outputs.tf"]
 
     ###############################
     # PREPARING MODULE MAIN FILES #
@@ -34,19 +34,14 @@
             description = "General Tags that will be applied to all the resources generated"
           }
 
-          variable "vpc_name" {
+          variable "nat_gateway_name" {
             type = string
-            description = "Name tag for the vpc resource"
+            description = "Name tag of the internet gateway"
           }
 
-          variable "vpc_cidr_block" {
+          variable "subnet_id" {
             type = string
-            description = "CIDR Block of VPC. E.g. 10.0.0.0/16"
-          }
-
-          variable "vpc_instance_tenancy" {
-            type = string
-            description = "A tenancy option for instances launched into the VPC. Values: default or dedicated"
+            description = "ID for the subnet resource"
           }
         marker: "#REMOVE_ME"
 
@@ -56,12 +51,16 @@
       ansible.builtin.blockinfile:
         path: "{{ module_outputs }}/main.tf"
         block: |
-          resource "aws_vpc" "{{ vpc_name }}" {
-            cidr_block       = var.vpc_cidr_block
-            instance_tenancy = var.vpc_instance_tenancy
+          resource "aws_eip" "nat_gateway_eip" {
+            domain = vpc
+          }
+
+          resource "aws_nat_gateway" "{{ nat_gateway_name }}" {
+            allocation_id = aws_eip.nat_gateway_eip.id
+            subnet_id   = var.subnet_id
 
             tags = merge(var.tags,
-              { Name = var.vpc_name })
+              { Name = var.nat_gateway_name })
           }
         marker: "#REMOVE_ME"
 
@@ -71,9 +70,9 @@
       ansible.builtin.blockinfile:
         path: "{{ module_outputs }}/outputs.tf"
         block: |
-          output "vpc_id" {
-            description = "The created vpc id"
-            value = aws_vpc.{{ vpc_name }}.id
+          output "nat_gateway_id" {
+            description = "Id of created nat gateway"
+            value = aws_nat_gateway.{{ nat_gateway_name }}.id
           }
         marker: "#REMOVE_ME"
 
@@ -86,11 +85,10 @@
       ansible.builtin.blockinfile:
         path: "{{ terraform_outputs }}/main.tf"
         block: |
-          module "aws_vpc" {
-            source = "./modules/vpc"
-            vpc_name     = var.vpc_name
-            vpc_cidr_block = var.vpc_cidr_block
-            vpc_instance_tenancy = var.vpc_instance_tenancy
+          module "aws_nat_gateway" {
+            source = "./modules/nat_gateway"
+            subnet_id = module.aws_subnet.subnet_id_private
+            nat_gateway_name  = var.nat_gateway_name
             tags = var.tags
           }
         marker: "#REMOVE_ME"
@@ -99,19 +97,9 @@
       ansible.builtin.blockinfile:
         path: "{{ terraform_outputs }}/variables.tf"
         block: |
-          variable "vpc_name" {
+          variable "nat_gateway_name" {
             type = string
-            description = "Name tag for the vpc resource"
-          }
-
-          variable "vpc_cidr_block" {
-            type = string
-            description = "CIDR Block of VPC. E.g. 10.0.0.0/16"
-          }
-
-          variable "vpc_instance_tenancy" {
-            type = string
-            description = "A tenancy option for instances launched into the VPC. Values: default or dedicated"
+            description = "Name tag for the internet gateway resource"
           }
         marker: "#REMOVE_ME"
 
@@ -120,9 +108,7 @@
       ansible.builtin.blockinfile:
         path: "{{ terraform_outputs }}/envVariables"
         block: |
-          vpc_name = "{{ vpc_name }}"
-          vpc_cidr_block = "{{ resources.vpc.options.cidr_block }}"
-          vpc_instance_tenancy = "{{ resources.vpc.options.instance_tenancy }}"
+          nat_gateway_name = "{{ nat_gateway_name }}"
         marker: "#REMOVE_ME"
 
 

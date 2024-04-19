@@ -1,0 +1,66 @@
+- name: Check if target variable is in accepted ones
+  set_fact:
+    ubuntu_target: "{{ target in ['ubuntu_22_04', 'ubuntu_20_04', 'ubuntu_23_10'] }}"
+    dockerVersion: "{{ utils.docker.version }}"
+
+- name:
+  apt:
+    name: "{{ item }}"
+    state: absent
+  with_items:
+    - docker.io
+    - docker-doc
+    - docker-compose
+    - docker-compose-v2
+    - podman-docker
+    - containerd
+    - runc
+  when: ubuntu_target
+
+- name: Add official GPG Docker
+  get_url:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    dest: /etc/apt/keyrings/docker.asc
+  become: true
+  when: ubuntu_target
+
+- name: Change permissions
+  file:
+    path: /etc/apt/keyrings/docker.asc
+    mode: "0644"
+  become: true
+  when: ubuntu_target
+
+- name: Add Docker repository
+  apt_repository:
+    repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+    state: present
+  become: true
+  when: ubuntu_target
+
+- name: Update APT and cache
+  apt:
+    update_cache: true
+  become: true
+  when: ubuntu_target
+
+- name: Install specific Docker version
+  shell: |
+    apt-get -y install docker-ce={{ dockerVersion }} docker-ce-cli={{ dockerVersion }} \
+    containerd.io docker-buildx-plugin docker-compose-plugin
+  become: true
+  when: ubuntu_target
+  register: result
+  ignore_errors: true
+
+- name: Install Docker if specific version is not available
+  shell: |
+    apt-get -y install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+  become: true
+  when: ubuntu_target and result.failed
+
+- name: Include user in docker group
+  shell: |
+    usermod -aG docker $(id -ng {{ ansible_user }})
+  become: true
+  when: ubuntu_target

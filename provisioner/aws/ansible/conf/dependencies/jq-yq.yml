@@ -1,0 +1,19 @@
+- name: Check if target variable is in accepted ones
+  set_fact:
+    ubuntu_target: "{{ target in ['ubuntu_22_04', 'ubuntu_20_04', 'ubuntu_23_10'] }}"
+
+- name: Install JQ
+  apt:
+    name:
+      - jq
+    state: present
+  become: true
+  when: ubuntu_target
+
+- name: Install YQ
+  shell: |
+    export BINARY=yq_linux_amd64; export VERSION=v4.2.0; \
+    wget https://github.com/mikefarah/yq/releases/download/${VERSION}/${BINARY}.tar.gz -O - |  tar xz && mv ${BINARY} \
+    /usr/bin/yq
+  become: true
+  when: ubuntu_target

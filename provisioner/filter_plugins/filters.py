@@ -13,7 +13,8 @@ class FilterModule(object):
             'normalize_string': self.normalize_string,
             'concat_strings': self.concat_strings,
             'concat_strings_raw': self.concat_strings_raw,
-            'append_datetime': self.append_datetime
+            'append_datetime': self.append_datetime,
+            'extract_ip': self.extract_ip
         }
     
     @staticmethod
@@ -32,6 +33,22 @@ class FilterModule(object):
         lower_str = value.lower()
         # Replace special characters and spaces with '_'
         return re.sub(r'\W+', '_', lower_str)
+    
+    @staticmethod
+    def extract_ip(value: str):
+        """
+        Extract the IP address from a string.
+
+        Parameters:
+        value (str): The string containing the IP address.
+
+        Returns:
+        str: The extracted IP address.
+        """
+        match = re.search(r'ip-(\d+-\d+-\d+-\d+)', value)
+        if match:
+            return match.group(1).replace('-', '.')
+        return None
     
     @staticmethod
     def concat_strings(*args):

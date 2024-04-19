@@ -1,0 +1,34 @@
+- name: Check if target variable is in accepted ones
+  set_fact:
+    ubuntu_target: "{{ target in ['ubuntu_22_04', 'ubuntu_20_04'] }}"
+
+- name: Check if AWS is installed
+  stat:
+    path: ["/usr/local/bin/aws"]
+  register: aws_present
+
+- name: Download AWS ZIP
+  shell: |
+    rm -rf awscliv2.zip aws
+    curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+  when: ubuntu_target
+
+- name: Unzip download
+  shell: |
+    unzip awscliv2.zip
+    rm -rf awscliv2.zip
+  when: ubuntu_target
+
+- name: Install with downloaded script
+  shell: |
+    ./aws/install
+  become: true
+  when: ubuntu_target and aws_present.stat.exists
+
+########## If present just update
+
+- name: Update with downloaded script
+  shell: |
+    ./aws/install --bin-dir /usr/local/bin --install-dir /usr/local/aws-cli --update
+  become: true
+  when: ubuntu_target and  not aws_present.stat.exists

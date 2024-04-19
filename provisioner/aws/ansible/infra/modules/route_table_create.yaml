@@ -1,6 +1,6 @@
 - name: Subnet route_table Preparation
   hosts: localhost
-  vars_files: ../env_variables_aws.yaml
+  vars_files: ../../env_variables_aws.yaml
 
   tasks:
     - name: Simplify reusable variables
@@ -39,7 +39,12 @@
             description = "Name tag of the route_table"
           }
 
-          variable "subnet_id" {
+          variable "subnet_id_public" {
+            type = string
+            description = "ID of the subnet"
+          }
+
+          variable "subnet_id_private" {
             type = string
             description = "ID of the subnet"
           }
@@ -57,13 +62,26 @@
         path: "{{ module_outputs }}/variables.tf"
         block: |
           {% if item.target == "playbook" %}
-          variable "target_id" {
+          variable "target_id_public" {
             type = string
             description = "ID of the target gateway"
           }
           {% endif %}
         marker: "#REMOVE_ME"
-      loop: "{{ resources.route_table.options.routes }}"
+      loop: "{{ resources.route_table.options.public.routes }}"
+
+    - name: Prepare module variables.tf (target ID - nat)
+      ansible.builtin.blockinfile:
+        path: "{{ module_outputs }}/variables.tf"
+        block: |
+          {% if item.target == "playbook" %}
+          variable "target_id_private" {
+            type = string
+            description = "ID of the target gateway"
+          }
+          {% endif %}
+        marker: "#REMOVE_ME"
+      loop: "{{ resources.route_table.options.private.routes }}"
 
 
     # main.tf
@@ -71,16 +89,28 @@
       ansible.builtin.blockinfile:
         path: "{{ module_outputs }}/main.tf"
         block: |
-          resource "aws_route_table" "{{ route_table_name }}" {
+          resource "aws_route_table" "{{ route_table_name }}_public" {
             vpc_id = var.vpc_id
             tags = merge(var.tags,
               { Name = var.route_table_name })
 
           }
 
-          resource "aws_route_table_association" "{{ route_table_name }}_as" {
+          resource "aws_route_table_association" "{{ route_table_name }}_public_as" {
             subnet_id      = var.subnet_id
-            route_table_id = aws_route_table.{{ route_table_name }}.id
+            route_table_id = aws_route_table.{{ route_table_name }}_public.id
+          }
+
+          resource "aws_route_table" "{{ route_table_name }}_private" {
+            vpc_id = var.vpc_id
+            tags = merge(var.tags,
+              { Name = var.route_table_name })
+
+          }
+
+          resource "aws_route_table_association" "{{ route_table_name }}_private_as" {
+            subnet_id      = var.subnet_id
+            route_table_id = aws_route_table.{{ route_table_name }}_private.id
           }
         marker: "#REMOVE_ME"
 
@@ -90,13 +120,27 @@
       ansible.builtin.blockinfile:
         path: "{{ module_outputs }}/main.tf"
         block: |
-          resource "aws_route" "{{ route_table_name }}_{{ l_index }}" {
-            route_table_id            = aws_route_table.{{ route_table_name }}.id
+          resource "aws_route" "{{ route_table_name }}_public_{{ l_index }}" {
+            route_table_id            = aws_route_table.{{ route_table_name }}_public.id
             destination_cidr_block    = "{{ item.destination }}"
-            {{ item.type }} = {{ 'var.target_id' if item.target == "playbook" else (target | quote )}}
+            {{ item.type }} = {{ 'var.target_id_public' if item.target == "playbook" else (target | quote )}}
           }
         marker: "#REMOVE_ME"
-      loop: "{{ resources.route_table.options.routes }}"
+      loop: "{{ resources.route_table.options.public.routes }}"
+      loop_control:
+        index_var: l_index
+
+    - name: Prepare module main.tf content file
+      ansible.builtin.blockinfile:
+        path: "{{ module_outputs }}/main.tf"
+        block: |
+          resource "aws_route" "{{ route_table_name }}_private_{{ l_index }}" {
+            route_table_id            = aws_route_table.{{ route_table_name }}_private.id
+            destination_cidr_block    = "{{ item.destination }}"
+            {{ item.type }} = {{ 'var.target_id_private' if item.target == "playbook" else (target | quote )}}
+          }
+        marker: "#REMOVE_ME"
+      loop: "{{ resources.route_table.options.private.routes }}"
       loop_control:
         index_var: l_index
 
@@ -109,13 +153,16 @@
       ansible.builtin.blockinfile:
         path: "{{ terraform_outputs }}/main.tf"
         block: |
-          module "aws_route_table" {
+          module "aws_route_table_public" {
             source = "./modules/route_table"
             vpc_id = {{ 'module.aws_vpc.vpc_id' if resources.vpc.enabled else 'var.vpc_id' | replace("'", "") }}
             subnet_id = {{ 'module.aws_subnet.subnet_id' if resources.subnet.enabled else 'var.subnet_id' | replace("'", "") }}
             route_table_name  = var.route_table_name
-            {% if resources.route_table.options.routes | selectattr("target", "equalto", "playbook") | list | length > 0 %}
+            {% if resources.route_table.options.public.routes | selectattr("target", "equalto", "playbook") | list | length > 0 %}
             target_id = module.aws_internet_gateway.internet_gateway_id
+            {% endif %}
+            {% if resources.route_table.options.private.routes | selectattr("target", "equalto", "playbook") | list | length > 0 %}
+            target_id = module.aws_nat_gateway.nat_gateway_id
             {% endif %}
             tags = var.tags
           }
