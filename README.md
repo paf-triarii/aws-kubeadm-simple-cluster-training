@@ -19,7 +19,7 @@ You can place it as well in your existing VPC and create the subnet, or place it
 
 It is quite flexible. Enjoy it!
 
-[Report Bug](https://github.com/Code-Triarii/aws-windows-provider/issues) · [Request Feature](https://github.com/Code-Triarii/aws-windows-provider/issues)
+[Report Bug](https://github.com/paf-triarii/aws-kubeadm-simple-cluster-training/issues) · [Request Feature](https://github.com/paf-triarii/aws-kubeadm-simple-cluster-training/issues)
 </div>
 
 <!-- TABLE OF CONTENTS -->
@@ -37,7 +37,7 @@ It is quite flexible. Enjoy it!
     - [💼 Usage](#-usage)
       - [Locally](#locally)
       - [With Docker](#with-docker)
-    - [🛜 Connect to instance](#-connect-to-instance)
+    - [🛜 Connect to instances](#-connect-to-instances)
   - [📍 Roadmap](#-roadmap)
   - [📎 Contributing](#-contributing)
   - [📃 License](#-license)
@@ -121,7 +121,7 @@ docker build provisioner -f provisioner/Dockerfile -t windows-provider:1.0 \
 1. Set the required environment variables. If you do not have such, please check Amazon documentation on how to generate those here.
 
 ```bash
-export AWS_REGION="eu-west-2"
+export AWS_REGION="eu-south-2"
 export AWS_ACCESS_KEY_ID="REAL_VALUE_OF_AWS_ACCESS_KEY_ID"
 export AWS_SECRET_ACCESS_KEY="REAL_VALUE_OF_AWS_SECRET_ACCESS_KEY"
 ```
@@ -133,6 +133,7 @@ export AWS_SECRET_ACCESS_KEY="REAL_VALUE_OF_AWS_SECRET_ACCESS_KEY"
 ```bash
 cp -r provisioner/filter_plugins ${HOME}
 export ANSIBLE_FILTER_PLUGINS="${HOME}/filter_plugins"
+export ANSIBLE_HOST_KEY_CHECKING=False
 ```
 
 4. Run the playbook.
@@ -141,13 +142,10 @@ export ANSIBLE_FILTER_PLUGINS="${HOME}/filter_plugins"
 ansible-playbook provisioner/aws/main.yaml -vv
 ```
 
-5. When the Terraform playbook has been generated, initialize and apply the project.
+5. If successful, run the configuration playbook:
 
 ```bash
-cd <outputs-folder-dynamically-calculated>
-terraform init
-terraform plan -var-file=envVariables --out tfplan
-terraform apply tfplan
+ansible-playbook aws/ansible/conf/main.yaml -i inventory.ini
 ```
 
 #### With Docker
@@ -162,31 +160,15 @@ docker run --user $(id -u):$(id -g) -v $(pwd)/provisioner:/app  -e AWS_ACCESS_KE
 > [!IMPORTANT]
 > Do not forget to set the real values for `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`.
 
-### 🛜 Connect to instance
+### 🛜 Connect to instances
 
-1. Obtain the password for the instance.
-
-```bash
-python3 provisioner/password_retriever.py  <bsa_auto_infra_sbt_0_password_data-value-showed-in-console> $(find $(pwd) -type d -name infra-provision*)/bsa-auto-infra/modules/key/bsa_auto_infra_sbt_key_0.pem
-```
-
-2. Use `Remote Desktop` from your instance to connect. Creds: `Administrator:<your-decrypted-password>`
-
-> [!TIP]
-> If you have enabled the creation of client vpn, follow the next steps. **Make sure to select your region first!**
-
-3. Navigate to [Client VPNS](https://eu-west-2.console.aws.amazon.com/vpc/home?region=eu-west-2#ClientVPNEndpoints:)
-4. Click on **Download client configuration**
-
-![Client VPN download](docs/img/client-download-vpn.png)
-
-5. Insert the client certificates in the downloaded file. Check the illustration for the format.
+1. Obtain the ssh key for the instances in:
 
 ```bash
-terraform_outputs=$(find $(pwd) -type d -name infra-provision*)
-cat ${terraform_outputs}/bsa-auto-infra/modules/vpn/pki_certs/client.crt
-cat ${terraform_outputs}/bsa-auto-infra/modules/vpn/pki_certs/client.key
+cd $(find $(pwd) -type d -name infra-provision*)/bsa-auto-infra/modules/key
 ```
+
+2. Launch a connection with ssh using the private ip and the hostname of the target destination.
 
 ![Client OpenVPN modification](docs/img/client-openvpn.png)
 
@@ -198,8 +180,9 @@ cat ${terraform_outputs}/bsa-auto-infra/modules/vpn/pki_certs/client.key
 - [x] Creates: VPC, Subnet, Internet Gateway, Security Groups, SSH keys and instances linking all the objects as required.
 - [x] Include creation of client vpn endpoint with self-signed certificates (not recommended for production set up).
 - [x] Support for more regions.
+- [x] Included automatic configuration of the cluster. 
 
-See the [open issues](https://github.com/Code-Triarii/aws-windows-provider/issues) for a full list of proposed features (and known issues).
+See the [open issues](https://github.com/paf-triarii/aws-kubeadm-simple-cluster-training/issues) for a full list of proposed features (and known issues).
 
 [🔝 Back to top](#--aws-kubeadm-simple-cluster-training)
 
