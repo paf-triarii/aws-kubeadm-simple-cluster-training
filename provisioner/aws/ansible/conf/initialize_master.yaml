@@ -66,6 +66,7 @@
     ansible.builtin.set_fact:
       ubuntu_target: "{{ target in ['ubuntu_22_04', 'ubuntu_20_04', 'ubuntu_23_10'] }}"
       kube_version: "{{ utils.kubernetes.version }}"
+      kubeconfig: "--kubeconfig {{ terraform_outputs }}/kubeconfig"
 
   # Ref: https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/
 
@@ -105,3 +106,10 @@
       state: present
     become: true
     when: ubuntu_target and utils.kubernetes.kubectl and kubectl_result.failed
+
+- name: Install Calico
+  shell: |
+    kubectl {{ kubeconfig }} create -f https://raw.githubusercontent.com/projectcalico/calico/{{ addOns.cni.calico.version }}/manifests/tigera-operator.yaml --server https://{{ ansible_hostname }}:6443
+    sleep 5
+    curl https://raw.githubusercontent.com/projectcalico/calico/{{ addOns.cni.calico.version }}/manifests/custom-resources.yaml | \
+    sed -e "s+192.168.0.0/16+{{ addOns.cni.calico.cidr }}+g" | kubectl {{ kubeconfig }} create -f - --server https://{{ ansible_hostname }}:6443

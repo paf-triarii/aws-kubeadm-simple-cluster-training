@@ -167,7 +167,7 @@ utils:
     version: "3.12"
   crio:
     enabled: true
-    version: "1.29"
+    version: "1.27"
     os: "xUbuntu_22.04"
   aws:
     enabled: true
@@ -179,7 +179,7 @@ utils:
     enabled: true
     version: "20.10.11"
   kubernetes:
-    version: "1.29.0"
+    version: "1.27.0"
     enabled: true
     kubectl: true
     kubeadm: true
@@ -213,4 +213,3 @@ addOns:
       # Double Quotes MUST be used in booleans
       entrypted: "true"
       type: gp2
-      # zones: eu-west-1b

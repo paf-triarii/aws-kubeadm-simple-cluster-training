@@ -1,0 +1,49 @@
+- name: Ensure absence of storage_class.yml
+  ansible.builtin.file:
+    path: "{{ terraform_outputs }}/storage_class.yml"
+    state: absent
+
+- name: Get subnet facts
+  community.aws.ec2_vpc_subnet_facts:
+    filters:
+      "tag:Name": "{{ subnet_name }}_private"
+  register: subnet_facts
+
+- name: Set fact for availability zone
+  ansible.builtin.set_fact:
+    subnet_availability_zone: "{{ subnet_facts.subnets[0].availability_zone }}"
+
+- name: Add content to Storageclass file
+  ansible.builtin.blockinfile:
+    path: "{{ terraform_outputs }}/storage_class.yml"
+    block: |
+      kind: StorageClass
+      apiVersion: storage.k8s.io/v1
+      metadata:
+        name: {{ addOns.storageClass.name }}
+        annotations:
+          storageclass.kubernetes.io/is-default-class: true
+      provisioner: {{ addOns.storageClass.provisioner }}
+      parameters:
+      {{ addOns.storageClass.parameters | to_nice_yaml | indent(2, first=true) }}
+        zones: {{ subnet_availability_zone }}
+    marker: "#REMOVE_ME"
+
+- name: Clean "#REMOVE_ME" for ensure subsequent susccessful injections
+  ansible.builtin.lineinfile:
+    path: "{{ terraform_outputs }}/storageClass.yml"
+    state: absent
+    regexp: '#REMOVE_ME'
+
+- name: Ensure double quotes in booleans
+  ansible.builtin.shell: |
+    sed -i -e 's+true+"true"+g' storageClass.yml
+    sed -i -e 's+false+"false"+g' storageClass.yml
+  args:
+    chdir: "{{ terraform_outputs }}"
+
+- name: Create storageClass
+  ansible.builtin.shell: |
+    kubectl {{ kubeconfig }} create -f  storageClass.yml
+  args:
+    chdir: "{{ terraform_outputs }}"

@@ -2,6 +2,10 @@
   hosts: localhost
   vars_files: ../env_variables_aws.yaml
   tasks:
+    - name: Prepare reusable fact
+      ansible.builtin.set_fact:
+        terraform_outputs: "{{ root.outputs.location }}/{{ root.terraform.prefix }}"
+
     - name: Check if success file exists
       ansible.builtin.stat:
         path: "{{ terraform_outputs }}/success"
@@ -34,3 +38,18 @@
 - name: Import playbook
   ansible.builtin.import_playbook: join_workers.yaml
   when: hostvars['localhost']['success_file_exists']
+
+- name: Install kubernetes resources
+  hosts: localhost
+  vars_files: ../env_variables_aws.yaml
+  tasks:
+    - name: Prepare reusable fact
+      ansible.builtin.set_fact:
+        terraform_outputs: "{{ root.outputs.location }}/{{ root.terraform.prefix }}"
+        kubeconfig: "--kubeconfig {{ terraform_outputs }}/kubeconfig"
+        subnet_name: "{{ root.terraform.prefix | normalize_string | concat_strings(resources.subnet.options.name) }}"
+
+    - name: Import playbook storage class
+      ansible.builtin.include_tasks: kubernetes_resources/storage_class.yaml
+      when: hostvars['localhost']['success_file_exists']
+    
