@@ -201,7 +201,7 @@ utils:
   gcloud:
     enabled: false
   docker:
-    enabled: true
+    enabled: false
     version: "20.10.11"
   kubernetes:
     version: "1.27.0"

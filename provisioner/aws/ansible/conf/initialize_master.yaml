@@ -6,7 +6,7 @@
     - name: Prepare reusable fact
       ansible.builtin.set_fact:
         terraform_outputs: "{{ root.outputs.location }}/{{ root.terraform.prefix }}"
-        api_server: "{{ ansible_hostname[3:] | replace('-', '.')  }}"
+        api_server: "{{ ansible_hostname[3:] | replace('-', '.') }}"
 
     - name: Kubeadm init
       shell: |
@@ -16,9 +16,9 @@
       register: kubeadm_output
       become: true
 
-  
     - name: Ensure idempotency removing file first
       shell: rm -rf /tmp/kubeadm_output
+      become: true
 
     - name: your local file on master node
       ansible.builtin.file:
@@ -37,7 +37,7 @@
     # Ref: https://stackoverflow.com/questions/7451423/how-to-show-only-next-line-after-the-matched-one
     - name: Get full join command
       ansible.builtin.shell:
-        cat /tmp/kubeadm_output | grep '\-\-certificate-key' -B 2
+        cat /tmp/kubeadm_output | grep '\-\-discovery-token-ca-cert-hash' -B 2 | head -3 | tail -n+2
       register: join_command
       become: true
 
