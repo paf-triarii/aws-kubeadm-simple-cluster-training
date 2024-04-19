@@ -5,14 +5,14 @@
  -->
 
 <!-- PROJECT LOGO -->
-# 📝 AWS EC2 Windows instance provider
+# 📝 # AWS Kubeadm Simple Cluster Training
 
 <!-- TECNOLOGIES -->
 ![Terraform Badge](https://img.shields.io/badge/Terraform-844FBA?logo=terraform&logoColor=fff&style=flat)
 ![Ansible Badge](https://img.shields.io/badge/Ansible-E00?logo=ansible&logoColor=fff&style=flat)
 ![Docker Badge](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=fff&style=flat)
 
-This is a simple (but effective) project that allows to quickly set-up windows instances in AWS environment.
+This is a simple (but effective) project that allows to quickly set-up a kubeadm cluster (`single master`) in AWS environment.
 It includes the possibility of creating the VPC, subnet, security groups and more for you.
 
 You can place it as well in your existing VPC and create the subnet, or place it inside your existing subnet.
@@ -26,7 +26,7 @@ It is quite flexible. Enjoy it!
 
 ## 📚 Table of contents
 
-- [📝 AWS EC2 Windows instance provider](#-aws-ec2-windows-instance-provider)
+- [📝 # AWS Kubeadm Simple Cluster Training](#--aws-kubeadm-simple-cluster-training)
   - [📚 Table of contents](#-table-of-contents)
   - [💡 Details](#-details)
     - [Resources](#resources)
@@ -197,11 +197,11 @@ cat ${terraform_outputs}/bsa-auto-infra/modules/vpn/pki_certs/client.key
 - [x] Support flexibility in creating the Terraform through ansible.
 - [x] Creates: VPC, Subnet, Internet Gateway, Security Groups, SSH keys and instances linking all the objects as required.
 - [x] Include creation of client vpn endpoint with self-signed certificates (not recommended for production set up).
-- [x] Support for more regions. 
+- [x] Support for more regions.
 
 See the [open issues](https://github.com/Code-Triarii/aws-windows-provider/issues) for a full list of proposed features (and known issues).
 
-[🔝 Back to top](#-aws-ec2-windows-instance-provider)
+[🔝 Back to top](#--aws-kubeadm-simple-cluster-training)
 
 <!-- CONTRIBUTING -->
 ## 📎 Contributing
@@ -225,14 +225,14 @@ If you have a suggestion that would make this better, please fork the repo and c
    ```
 5. Open a Pull Request
 
-[🔝 Back to top](#-aws-ec2-windows-instance-provider)
+[🔝 Back to top](#--aws-kubeadm-simple-cluster-training)
 
 <!-- LICENSE -->
 ## 📃 License
 
 Distributed under the `Apache 2.0` License. See [LICENSE](./LICENSE) for more information.
 
-[🔝 Back to top](#-aws-ec2-windows-instance-provider)
+[🔝 Back to top](#--aws-kubeadm-simple-cluster-training)
 
 <!-- CONTACT -->
 ## 👥 Contact
@@ -255,4 +255,4 @@ Do not skip it, you will like it :smirk: :smirk: :smirk: :+1:
 
 Don't forget to give the project a star if you liked it! Thanks again! :star2: :yellow_heart:
 
-[🔝 Back to top](#-aws-ec2-windows-instance-provider)
+[🔝 Back to top](#--aws-kubeadm-simple-cluster-training)

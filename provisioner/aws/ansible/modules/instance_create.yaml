@@ -76,8 +76,6 @@
             instance_type = var.instance_type
             ami = var.instance_ami
             key_name = var.key_name
-            # To Obtain Windows Administrator Password Automatically
-            get_password_data = true
 
             vpc_security_group_ids = [
               var.security_group_id

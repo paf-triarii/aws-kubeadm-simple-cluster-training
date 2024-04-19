@@ -34,12 +34,22 @@
             description = "General Tags that will be applied to all the resources generated"
           }
 
-          variable "subnet_name" {
+          variable "subnet_name_public" {
             type = string
             description = "Name tag for the subnet resource"
           }
 
-          variable "subnet_cidr_block" {
+          variable "subnet_cidr_block_public" {
+            type = string
+            description = "CIDR Block of subnet. E.g. 10.0.0.0/24"
+          }
+
+          variable "subnet_name_private" {
+            type = string
+            description = "Name tag for the subnet resource"
+          }
+
+          variable "subnet_cidr_block_private" {
             type = string
             description = "CIDR Block of subnet. E.g. 10.0.0.0/24"
           }
@@ -56,10 +66,18 @@
       ansible.builtin.blockinfile:
         path: "{{ module_outputs }}/main.tf"
         block: |
-          resource "aws_subnet" "{{ subnet_name }}" {
+          resource "aws_subnet" "{{ subnet_name }}_public" {
             vpc_id     = var.vpc_id
-            cidr_block = var.subnet_cidr_block
+            cidr_block = var.subnet_cidr_block_public
             map_public_ip_on_launch = true
+
+            tags = merge(var.tags,
+              { Name = var.subnet_name })
+          }
+
+          resource "aws_subnet" "{{ subnet_name }}_private" {
+            vpc_id     = var.vpc_id
+            cidr_block = var.subnet_cidr_block_private
 
             tags = merge(var.tags,
               { Name = var.subnet_name })
@@ -72,9 +90,13 @@
       ansible.builtin.blockinfile:
         path: "{{ module_outputs }}/outputs.tf"
         block: |
-          output "subnet_id" {
+          output "subnet_id_public" {
             description = "The created subnet id"
-            value = aws_subnet.{{ subnet_name }}.id
+            value = aws_subnet.{{ subnet_name }}_public.id
+          }
+          output "subnet_id_private" {
+            description = "The created subnet id"
+            value = aws_subnet.{{ subnet_name }}_private.id
           }
         marker: "#REMOVE_ME"
 
@@ -90,8 +112,10 @@
           module "aws_subnet" {
             source = "./modules/subnet"
             vpc_id = module.aws_vpc.vpc_id
-            subnet_name     = var.subnet_name
-            subnet_cidr_block = var.subnet_cidr_block
+            subnet_name_public     = var.subnet_name_public
+            subnet_cidr_block_public = var.subnet_cidr_block_public
+            subnet_name_private     = var.subnet_name_private
+            subnet_cidr_block_private = var.subnet_cidr_block_private
             tags = var.tags
           }
         marker: "#REMOVE_ME"
@@ -100,12 +124,22 @@
       ansible.builtin.blockinfile:
         path: "{{ terraform_outputs }}/variables.tf"
         block: |
-          variable "subnet_name" {
+          variable "subnet_name_public" {
             type = string
             description = "Name tag for the subnet resource"
           }
 
-          variable "subnet_cidr_block" {
+          variable "subnet_cidr_block_public" {
+            type = string
+            description = "CIDR Block of subnet. E.g. 10.0.0.0/24"
+          }
+
+          variable "subnet_name_private" {
+            type = string
+            description = "Name tag for the subnet resource"
+          }
+
+          variable "subnet_cidr_block_private" {
             type = string
             description = "CIDR Block of subnet. E.g. 10.0.0.0/24"
           }
@@ -116,8 +150,10 @@
       ansible.builtin.blockinfile:
         path: "{{ terraform_outputs }}/envVariables"
         block: |
-          subnet_name = "{{ subnet_name }}"
-          subnet_cidr_block = "{{ resources.subnet.options.cidr_block }}"
+          subnet_name_public = "{{ subnet_name }}_public"
+          subnet_cidr_block_public = "{{ resources.subnet.options.cidr_block.public }}"
+          subnet_name_public = "{{ subnet_name }}_private"
+          subnet_cidr_block_public = "{{ resources.subnet.options.cidr_block.private }}"
         marker: "#REMOVE_ME"
 
 

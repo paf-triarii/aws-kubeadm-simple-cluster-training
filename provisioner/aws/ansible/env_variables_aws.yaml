@@ -25,7 +25,7 @@ resources:
     # This is only required when the resource is going to be created
     options:
       name: "vpc"
-      cidr_block: 10.15.0.0/20
+      cidr_block: "{{ resources.vpc.options.cidr_block }}"
       instance_tenancy: "default"
       enable_dns_support: "true"
       enable_dns_hostnames: "false"
@@ -37,7 +37,9 @@ resources:
     # This is only required when the resource is going to be created
     options:
       name: "sbt"
-      cidr_block: 10.15.0.0/24
+      cidr_block:
+        public: 10.15.0.0/24
+        private: 10.16.0.0/24
       availability_zone: ""
   security_group:
     enabled: true
@@ -57,23 +59,7 @@ resources:
               start: 0
               end: 65535
             # IMPORTANT: To enable this rule, ensure that matches the resources.vpc.options.cidr_block
-            source: 10.15.0.0/20
-
-          - name: Allow RDP Traffic for my target IP
-            protocol: TCP
-            portRange:
-              start: 3389
-              end: 3389
-            # This is a sample public IP
-            source: 45.85.127.50/32
-
-          - name: Allow RDP Traffic for my target IP 2
-            protocol: TCP
-            portRange:
-              start: 3389
-              end: 3389
-            # This is a sample public IP
-            source: 88.17.97.238/32
+            source: "{{ resources.vpc.options.cidr_block }}"
 
           - name: Allow SSH Traffic for my target IP
             protocol: TCP
@@ -93,7 +79,7 @@ resources:
               end: 65535
             # IMPORTANT: To enable this rule, ensure that matches the resources.vpc.options.cidr_block
             # TODO: Create automation so it "Self VPC" inputs the VPC id either pre-existing or generated instead of having to have the exact value.
-            destination: 10.15.0.0/20
+            destination: "{{ resources.vpc.options.cidr_block }}"
 
           - name: Allow Common internet 80
             protocol: TCP
@@ -120,16 +106,16 @@ resources:
     bits: 4096
   instance:
     enabled: true
-    count: 1
+    count: 3
     options:
-      name: "windows"
+      name: "ubuntu"
       ami:
-        eu-south-2: "ami-0a71f7e0e2d92a151"
-        eu-west-1: "ami-0aa99174e2f8adfb4"
-        eu-west-2: "ami-0c618421e207909d0"
-        eu-west-3: "ami-0a1491ab12bfc93df"
-        eu-central-1: "ami-0e9ea35223a924666"
-      instance_type: "t3.2xlarge"
+        eu-south-2: "ami-0ee19dcf57f09e938"
+        eu-west-1: "ami-0c1c30571d2dae5c9"
+        eu-west-2: "ami-0b9932f4918a00c4f"
+        eu-west-3: "ami-00c71bd4d220aa22a"
+        eu-central-1: "ami-023adaba598e661ac"
+      instance_type: "t3.large"
       volumes:
         size: 100
         delete_on_termination: true
@@ -139,6 +125,11 @@ resources:
     options:
       name: "ig"
     # IMPORTANT-IG-ID: In case of using an existing internet gateway, remember to include the id in the routes for internet access resources.route_table.options.routes[0].target
+  nat_gateway:
+    enabled: true
+    options:
+      name: "nat"
+      elastic_ip: true
   route_table:
     enabled: true
     options:
