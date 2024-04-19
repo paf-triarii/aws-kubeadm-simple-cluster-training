@@ -1,0 +1,13 @@
+- name: Internet gateway Preparation
+  hosts: masters:workers
+  vars_files: ../env_variables_aws.yaml
+  tasks:
+    - name: Check if success file exists
+      ansible.builtin.stat:
+        path: "{{ terraform_outputs }}/success"
+      register: success_file
+      delegate_to: localhost
+
+    - name: Import playbook
+      ansible.builtin.include_tasks: install_dependencies.yaml
+      when: success_file_exists

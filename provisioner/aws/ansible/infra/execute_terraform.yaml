@@ -79,3 +79,8 @@
         path: "../conf/inventory.ini"
         block: "{{ block_content }}"
         marker: "#REMOVE_ME"
+
+    - name: Inform of success of execution
+      ansible.builtin.file:
+        path: "{{ terraform_outputs }}/success"
+        state: present
