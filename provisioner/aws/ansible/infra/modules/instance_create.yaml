@@ -133,6 +133,7 @@
             instance_name = "{{ instance_name }}_{{ l_index }}"
             instance_type = var.instance_type
             instance_ami = var.instance_ami
+            aws_role_name = module.aws_iam_instance_profile.aws_role_name
             key_name = module.aws_key_pair.{{ key_pair_name }}_{{ l_index }}
             security_group_id = module.aws_security_group.security_group_id
             tags = var.tags

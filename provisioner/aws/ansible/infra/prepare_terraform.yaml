@@ -161,6 +161,10 @@
   when: resources.instance.enabled
 
 - name: Generate instance resource
+  ansible.builtin.import_playbook: modules/role_create.yaml
+  when: resources.role.enabled
+
+- name: Generate instance resource
   ansible.builtin.import_playbook: modules/instance_create.yaml
   when: resources.instance.enabled
 

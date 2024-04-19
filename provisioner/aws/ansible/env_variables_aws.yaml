@@ -104,6 +104,8 @@ resources:
   key:
     algorithm: RSA
     bits: 4096
+  role:
+    enabled: true
   instance:
     enabled: true
     count: 3
