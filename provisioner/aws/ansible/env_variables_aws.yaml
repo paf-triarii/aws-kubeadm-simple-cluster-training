@@ -188,14 +188,14 @@ resources:
 target: ubuntu_22_04
 utils:
   python:
-    enabled: true
+    enabled: false
     version: "3.12"
   crio:
     enabled: true
     version: "1.27"
     os: "xUbuntu_22.04"
   aws:
-    enabled: true
+    enabled: false
   azure:
     enabled: false
   gcloud:
@@ -205,14 +205,14 @@ utils:
     version: "20.10.11"
   kubernetes:
     version: "1.27.0"
-    enabled: true
-    kubectl: true
-    kubeadm: true
-    kubelet: true
+    enabled: false
+    kubectl: false
+    kubeadm: false
+    kubelet: false
   jq_yq:
-    enabled: true
+    enabled: false
   helm:
-    enabled: true
+    enabled: false
 
 addOns:
   createNamespaces: true

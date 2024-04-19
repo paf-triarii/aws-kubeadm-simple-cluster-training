@@ -93,3 +93,21 @@
       runtime_root = "/run/runc"
     marker: "#REMOVE_ME"
   become: true
+
+
+- name: Apply required final changes
+  shell: |
+    if [ -f /usr/lib/cri-o-runc/sbin/runc ]; then
+      mv /usr/lib/cri-o-runc/sbin/runc /usr/bin
+    fi
+    systemctl daemon-reload
+    systemctl restart crio
+    systemctl enable crio
+  become: true
+
+- name: Clean "#REMOVE_ME" unwanted markers for previous block insertions
+  ansible.builtin.lineinfile:
+    path: "{{ extra_settings_location }}"
+    state: absent
+    regexp: '#REMOVE_ME'
+  become: true

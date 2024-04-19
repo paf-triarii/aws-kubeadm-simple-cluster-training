@@ -56,8 +56,8 @@ RUN echo "${USER} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/10-user
 
 ##############################################################
 
-COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+COPY entrypoint.sh $DIR/entrypoint.sh
+RUN chmod +x $DIR/entrypoint.sh
 
 USER ${UID}:${GID}
 
@@ -65,4 +65,4 @@ ENV ANSIBLE_HOST_KEY_CHECKING=False
 ENV ANSIBLE_USER_LOCAL="perico"
 ENV ANSIBLE_USER_REMOTE="ubuntu"
 
-ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT ["/app/entrypoint.sh"]

@@ -5,3 +5,4 @@ infra-provision**
 .ansible
 .bash_history
 .terraform.d
+.ssh

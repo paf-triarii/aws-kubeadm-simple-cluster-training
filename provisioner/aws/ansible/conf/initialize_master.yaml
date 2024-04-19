@@ -6,10 +6,11 @@
     - name: Prepare reusable fact
       ansible.builtin.set_fact:
         terraform_outputs: "{{ root.outputs.location }}/{{ root.terraform.prefix }}"
+        api_server: "{{ ansible_hostname[3:] | replace('-', '.')  }}"
 
     - name: Kubeadm init
       shell: |
-        kubeadm init --cri-socket unix:///var/run/crio/crio.sock --control-plane-endpoint "{{ ansible_hostname }}:6443" \
+        kubeadm init --cri-socket unix:///var/run/crio/crio.sock --control-plane-endpoint "{{ api_server }}:6443" \
         --pod-network-cidr={{ addOns.cni.calico.cidr }} \
         --service-cidr=10.96.0.0/12
       register: kubeadm_output
@@ -109,7 +110,7 @@
 
     - name: Install Calico
       ansible.builtin.shell: |
-        kubectl {{ kubeconfig }} create -f https://raw.githubusercontent.com/projectcalico/calico/{{ addOns.cni.calico.version }}/manifests/tigera-operator.yaml --server https://{{ ansible_hostname }}:6443
+        kubectl {{ kubeconfig }} create -f https://raw.githubusercontent.com/projectcalico/calico/{{ addOns.cni.calico.version }}/manifests/tigera-operator.yaml --server https://{{ api_server }}:6443
         sleep 5
         curl https://raw.githubusercontent.com/projectcalico/calico/{{ addOns.cni.calico.version }}/manifests/custom-resources.yaml | \
-        sed -e "s+192.168.0.0/16+{{ addOns.cni.calico.cidr }}+g" | kubectl {{ kubeconfig }} create -f - --server https://{{ ansible_hostname }}:6443
+        sed -e "s+192.168.0.0/16+{{ addOns.cni.calico.cidr }}+g" | kubectl {{ kubeconfig }} create -f - --server https://{{ api_server }}:6443
