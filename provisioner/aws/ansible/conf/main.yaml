@@ -25,7 +25,7 @@
         kubeadm reset -f --cri-socket unix:///var/run/crio/crio.sock
         rm -rf /etc/kubernetes/*
         rm -rf /var/lib/etcd
-        rm -rf /etc/apt/sources.list.d/*       
+        rm -rf /etc/apt/sources.list.d/*
       become: true
       ignore_errors: true
       when: hostvars['localhost']['success_file_exists']
@@ -52,7 +52,11 @@
         kubeconfig: "--kubeconfig {{ terraform_outputs }}/kubeconfig"
         subnet_name: "{{ root.terraform.prefix | normalize_string | concat_strings(resources.subnet.options.name) }}"
 
+    - name: Install aws
+      ansible.builtin.include_tasks:
+        file: dependencies/aws.yml
+      when: utils.aws.enabled
+
     - name: Import playbook storage class
       ansible.builtin.include_tasks: kubernetes_resources/storage_class.yaml
       when: hostvars['localhost']['success_file_exists']
-    

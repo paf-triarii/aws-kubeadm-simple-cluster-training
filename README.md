@@ -88,7 +88,7 @@ pip install ansible==9.4.0
 3. Install Ansible collection for aws:
 
 ```bash
-ansible-galaxy collection install amazon.aws community.aws
+ansible-galaxy collection install amazon.aws
 ```
 
 4. Install boto3 with pip.

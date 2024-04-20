@@ -5,15 +5,15 @@
 
 - name: Get subnet facts
   ansible.builtin.command: >
-    aws ec2 describe-subnets
-    --filters "Name=tag:Name,Values={{ subnet_name }}_private"
-    --query "Subnets[0].AvailabilityZone"
-    --output text
+    aws ec2 describe-subnets \
+    --filters "Name=tag:Name,Values={{ subnet_name }}_private" \
+    --query "Subnets[0].AvailabilityZone" \
+    --output text \
   register: subnet_facts
 
 - name: Set fact for availability zone
   ansible.builtin.set_fact:
-    subnet_availability_zone: "{{ subnet_facts.subnets[0].availability_zone }}"
+    subnet_availability_zone: "{{ subnet_facts.stdout }}"
 
 - name: Add content to Storageclass file
   ansible.builtin.blockinfile:
