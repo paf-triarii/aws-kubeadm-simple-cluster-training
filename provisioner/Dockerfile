@@ -27,7 +27,7 @@ RUN apt-get update \
   && DEBIAN_FRONTEND=noninteractive apt-get install -y python3 python3-pip ansible sudo
 
 # This are Ansible requirements for being able to use AWS tasks/modules
-RUN ansible-galaxy collection install amazon.aws 
+RUN ansible-galaxy collection install amazon.aws community.aws
 
 RUN pip install boto3 botocore
 
@@ -60,6 +60,9 @@ COPY entrypoint.sh $DIR/entrypoint.sh
 RUN chmod +x $DIR/entrypoint.sh
 
 USER ${UID}:${GID}
+
+RUN sudo curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" \
+  && sudo install -o ${USER} -g ${GROUP} -m 0755 kubectl /usr/local/bin/kubectl
 
 ENV ANSIBLE_HOST_KEY_CHECKING=False
 ENV ANSIBLE_USER_LOCAL="perico"

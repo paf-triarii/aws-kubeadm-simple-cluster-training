@@ -68,40 +68,17 @@
         ubuntu_target: "{{ target in ['ubuntu_22_04', 'ubuntu_20_04', 'ubuntu_23_10'] }}"
         kube_version: "{{ utils.kubernetes.version }}"
         kubeconfig: "--kubeconfig {{ terraform_outputs }}/kubeconfig"
-    
+        api_server: "{{ hostvars[groups['masters'][0]]['api_server'] }}"
+
     - name: Install docker
       ansible.builtin.include_tasks:
         file: dependencies/common.yml
       when: utils.docker.enabled
 
-    - name: Add Kubernetes repository
-      ansible.builtin.shell: |
-        echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.29/deb/ /' \
-        | tee /etc/apt/sources.list.d/kubernetes.list
-      become: true
-      when: ubuntu_target
-
-    - name: Update APT and cache
-      ansible.builtin.apt:
-        update_cache: true
-      become: true
-      when: ubuntu_target
-
-    - name: Install kubectl
-      ansible.builtin.apt:
-        name: "kubectl={{ kube_version }}"
-        state: present
-      become: true
-      when: ubuntu_target and utils.kubernetes.kubectl
-      register: kubectl_result
-      ignore_errors: true
-
-    - name: Install kubectl if specific version is not available
-      ansible.builtin.apt:
-        name: kubectl
-        state: present
-      become: true
-      when: ubuntu_target and utils.kubernetes.kubectl and kubectl_result.failed
+    - name: Install kubernetes resources
+      ansible.builtin.include_tasks:
+        file: dependencies/kubernetes.yml
+      when: utils.docker.enabled
 
     - name: Install Calico
       ansible.builtin.shell: |

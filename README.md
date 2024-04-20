@@ -88,7 +88,7 @@ pip install ansible==9.4.0
 3. Install Ansible collection for aws:
 
 ```bash
-ansible-galaxy collection install amazon.aws
+ansible-galaxy collection install amazon.aws community.aws
 ```
 
 4. Install boto3 with pip.
@@ -187,6 +187,8 @@ cat ${terraform_outputs}/bsa-auto-infra/modules/vpn/pki_certs/client.key
 ![Open VPN Config](docs/img/client-openvpn.png)
 
 6. Launch a connection with ssh using the private ip and the hostname of the target destination.
+
+![Cluster Ready](docs/img/cluster-ready.png)
 
 <!-- ROADMAP -->
 ## 📍 Roadmap

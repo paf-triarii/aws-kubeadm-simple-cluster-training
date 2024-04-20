@@ -4,9 +4,11 @@
     state: absent
 
 - name: Get subnet facts
-  community.aws.ec2_vpc_subnet_facts:
-    filters:
-      "tag:Name": "{{ subnet_name }}_private"
+  ansible.builtin.command: >
+    aws ec2 describe-subnets
+    --filters "Name=tag:Name,Values={{ subnet_name }}_private"
+    --query "Subnets[0].AvailabilityZone"
+    --output text
   register: subnet_facts
 
 - name: Set fact for availability zone

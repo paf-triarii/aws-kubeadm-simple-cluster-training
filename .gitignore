@@ -6,3 +6,4 @@ infra-provision**
 .bash_history
 .terraform.d
 .ssh
+.kube

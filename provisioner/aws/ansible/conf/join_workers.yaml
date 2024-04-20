@@ -11,10 +11,11 @@
       set_fact:
         token: "{{ hostvars[groups['masters'][0]]['token'] }}"
         hash: "{{ hostvars[groups['masters'][0]]['hash'] }}"
+        api_server: "{{ hostvars[groups['masters'][0]]['api_server'] }}"
 
     - name: Kubeadm join
       shell: |
-        kubeadm join "{{ cluster.dns }}:{{ cluster.apiPort }}" \
+        kubeadm join "{{ api_server }}:6443" --cri-socket unix:///var/run/crio/crio.sock  \
         --token {{token}} --discovery-token-ca-cert-hash {{hash}}
       register: kubeadm_output
       become: true
