@@ -29,6 +29,7 @@ It is quite flexible. Enjoy it!
 - [📝 # AWS Kubeadm Simple Cluster Training](#--aws-kubeadm-simple-cluster-training)
   - [📚 Table of contents](#-table-of-contents)
   - [💡 Details](#-details)
+    - [Outcome architecture](#outcome-architecture)
     - [Resources](#resources)
   - [🚀 Installation and Execution](#-installation-and-execution)
     - [🔧 Installation](#-installation)
@@ -46,6 +47,40 @@ It is quite flexible. Enjoy it!
 <!--te-->
 
 ## 💡 Details
+
+### Outcome architecture
+
+![Arch](docs/img/infrastrucure_architecture.png)
+
+The outcome of the playbook is a `single master kubeadm cluster` configured with AWS infrastructure as shown:
+
+- **Public subnet**
+  - Represented by a blue outline within a red rectangle.
+  - Contains two icons:
+    - A cloud symbol, typically representing internet access.
+    - An orange square with a white border, likely representing a gateway or router.
+
+- **Private subnet**
+  - Represented by a blue outline within a red rectangle, on the right side.
+  - Contains several icons:
+    - Three orange vertical bars, two of which are labeled "Worker 1" and "Worker 2", possibly representing servers or computing resources.
+    - One orange vertical bar labeled "Master", possibly indicating a master server or control node.
+    - A purple icon with a lock symbol, labeled "Client VPN endpoint", indicating a secure entry point for VPN connections.
+
+- **Route tables**
+  - Two identical icons located between the public and private subnets.
+  - Represented by an orange circle with lines emanating from the center, symbolizing routing paths or connections.
+
+- **Connections**
+  - There are multiple purple arrows indicating connections or data flow:
+    - From the cloud symbol in the public subnet to the gateway/router icon.
+    - From the gateway/router icon in the public subnet to both route tables.
+    - From each route table to the "Master" and both "Worker" icons in the private subnet.
+
+- **Overall Structure**
+  - The image depicts a network architecture with separate public and private subnets.
+  - The public subnet is connected to the internet and has a routing mechanism to interface with the private subnet.
+  - The private subnet hosts the core computing resources and is accessible via a client VPN endpoint for secure access.
 
 ### Resources
 
