@@ -36,7 +36,7 @@
 
     # Ref: https://stackoverflow.com/questions/7451423/how-to-show-only-next-line-after-the-matched-one
     - name: Get full join command
-      ansible.builtin.shell:
+      ansible.builtin.shell: |
         cat /tmp/kubeadm_output | grep '\-\-discovery-token-ca-cert-hash' -B 2 | head -3 | tail -n+2
       register: join_command
       become: true
@@ -49,7 +49,7 @@
       ansible.builtin.set_fact:
         token: "{{ join_command[6] }}"
         hash: "{{ join_command[8] }}"
-        cert_key: "{{ join_command[11] }}"
+        # cert_key: "{{ join_command[11] }}" # Only for high-availability
       register: join_options
 
     - name: Get kubeconfig
@@ -68,16 +68,11 @@
         ubuntu_target: "{{ target in ['ubuntu_22_04', 'ubuntu_20_04', 'ubuntu_23_10'] }}"
         kube_version: "{{ utils.kubernetes.version }}"
         kubeconfig: "--kubeconfig {{ terraform_outputs }}/kubeconfig"
-
-    # Ref: https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/
-
-    - name: Install Google Cloud public signing key
-      ansible.builtin.shell: |
-        mkdir -p -m 755 /etc/apt/keyrings
-        curl -fsSL https://pkgs.k8s.io/core:/stable:/v{{ kube_version.split('.')[0:2] | join('.') }}/deb/Release.key \
-        | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
-      become: true
-      when: ubuntu_target
+    
+    - name: Install docker
+      ansible.builtin.include_tasks:
+        file: dependencies/common.yml
+      when: utils.docker.enabled
 
     - name: Add Kubernetes repository
       ansible.builtin.shell: |

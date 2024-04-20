@@ -24,7 +24,8 @@
         hostnamectl set-hostname $(curl http://169.254.169.254/latest/meta-data/local-hostname)
         kubeadm reset -f --cri-socket unix:///var/run/crio/crio.sock
         rm -rf /etc/kubernetes/*
-        rm -rf /var/lib/etcd        
+        rm -rf /var/lib/etcd
+        rm -rf /etc/apt/sources.list.d/*       
       become: true
       ignore_errors: true
       when: hostvars['localhost']['success_file_exists']

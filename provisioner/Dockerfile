@@ -13,7 +13,7 @@ ENV VERBOSITY="--vvv"
 
 
 # Installing required dependencies
-RUN apt-get update && apt-get install -y git software-properties-common wget
+RUN apt-get update && apt-get install -y git software-properties-common wget curl unzip gnupg-agent gnupg
 
 COPY --from=terraform /bin/terraform /bin/terraform
 

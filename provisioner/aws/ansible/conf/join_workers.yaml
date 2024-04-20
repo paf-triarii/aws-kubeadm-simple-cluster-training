@@ -1,4 +1,5 @@
-- name: Initialize Workers 
+- name: Initialize Workers
+  hosts: workers
   vars_files:
     - ../env_variables_aws.yaml
   tasks:
