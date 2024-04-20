@@ -56,26 +56,16 @@ The outcome of the playbook is a `single master kubeadm cluster` configured with
 
 - **Public subnet**
   - Represented by a blue outline within a red rectangle.
-  - Contains two icons:
-    - A cloud symbol, typically representing internet access.
-    - An orange square with a white border, likely representing a gateway or router.
 
 - **Private subnet**
   - Represented by a blue outline within a red rectangle, on the right side.
   - Contains several icons:
-    - Three orange vertical bars, two of which are labeled "Worker 1" and "Worker 2", possibly representing servers or computing resources.
-    - One orange vertical bar labeled "Master", possibly indicating a master server or control node.
+    - EC2 instances: 1 master and N number of workers (depending on instance count) that compound the Kubernetes cluster. Each instance with an iam profile applied.
     - A purple icon with a lock symbol, labeled "Client VPN endpoint", indicating a secure entry point for VPN connections.
 
 - **Route tables**
   - Two identical icons located between the public and private subnets.
   - Represented by an orange circle with lines emanating from the center, symbolizing routing paths or connections.
-
-- **Connections**
-  - There are multiple purple arrows indicating connections or data flow:
-    - From the cloud symbol in the public subnet to the gateway/router icon.
-    - From the gateway/router icon in the public subnet to both route tables.
-    - From each route table to the "Master" and both "Worker" icons in the private subnet.
 
 - **Overall Structure**
   - The image depicts a network architecture with separate public and private subnets.
