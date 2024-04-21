@@ -20,6 +20,7 @@
       - unzip
       - bash-completion
       - gh
+      -  net-tools
     state: present
   become: true
   when: ubuntu_target

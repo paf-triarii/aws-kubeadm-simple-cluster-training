@@ -23,9 +23,29 @@
       shell: |
         hostnamectl set-hostname $(curl http://169.254.169.254/latest/meta-data/local-hostname)
         kubeadm reset -f --cri-socket unix:///var/run/crio/crio.sock
-        rm -rf /etc/kubernetes/*
-        rm -rf /var/lib/etcd
-        rm -rf /etc/apt/sources.list.d/*
+      become: true
+      ignore_errors: true
+      when: hostvars['localhost']['success_file_exists']
+
+    - name: Ensure reset kubernetes cluster 
+        rm -rf /etc/kubernetes/* 2> /dev/null
+        rm -rf /var/lib/etcd 2> /dev/null
+        rm -rf /etc/apt/sources.list.d/* 2> /dev/null
+        rm -rf /var/lib/cni/ 2> /dev/null
+        rm -rf /var/lib/kubelet/* 2> /dev/null
+        rm -rf /etc/cni/ 2> /dev/null
+        ifconfig cni0 down 2> /dev/null
+        ip link delete cni0 2> /dev/null
+        ip link delete flannel.1 2> /dev/null
+        ip link delete vxlan.calico 2> /dev/null
+        ifconfig flannel.1 down 2> /dev/null
+        ifconfig vxlan.calico down 2> /dev/null
+        ifconfig docker0 down 2> /dev/null
+        systemctl daemon-reload 2> /dev/null
+        systemctl restart crio 2> /dev/null
+        systemctl enable crio 2> /dev/null
+        systemctl stop kubelet 2> /dev/null
+        systemctl stop docker 2> /dev/null
       become: true
       ignore_errors: true
       when: hostvars['localhost']['success_file_exists']
